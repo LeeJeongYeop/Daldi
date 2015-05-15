@@ -1,7 +1,7 @@
 # Daldi
 T아카데미 Daldi Project (Node.js, MariaDB)
 -
-#.ignore(db_config.jon)
+###.ignore(db_config.jon)
 {
 	"connectionLimit" : ,
 	"host" : ,
