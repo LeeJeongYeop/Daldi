@@ -53,7 +53,7 @@ router.post('/board/add', function(req, res, next){
 		var umb_title = req.body.Umb_Title;
 		if(req.files.Umb_Img){
 			var filename = req.files.Umb_Img.name;
-			var file_path = 'http://52.68.54.75:3000/umenu/umenuBoard/'+filename;
+			var file_path = 'http://52.68.54.75/umenu/umenuBoard/'+filename;
 		}else{
 			var file_path = null;
 		}
@@ -143,7 +143,7 @@ router.post("/board/update", function(req, res, next){
 	var new_umb_title = req.body.New_Umb_Title;
 	if(req.files.New_Umb_Img){
 		var filename = req.files.New_Umb_Img.name;
-		var file_path = 'http://52.68.54.75:3000/umenu/umenuBoard/'+filename;
+		var file_path = 'http://52.68.54.75/umenu/umenuBoard/'+filename;
 		var data = [new_umb_title, file_path, umb_no];
 	}else{
 		var data = [new_umb_title, umb_no];
