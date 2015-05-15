@@ -243,18 +243,74 @@ router.post("/add", function(req, res, next){
 	var data = [umb_no, menu_no];
 
 	if(req.session.log_data){
-		db_umenu.add(data, function(check, msg){
-			if(check){
-				res.json({
-					"Result" : msg
-				});	
-			}else{
-				res.json({
-					"Result" : "Add Fail",
-					"MSG" : msg
-				});			
-			}
+		if(menu_no instanceof Array){
+			db_umenu.add(data, function(check, msg){
+				if(check){
+					res.json({
+						"Result" : msg
+					});	
+				}else{
+					res.json({
+						"Result" : "Add Fail",
+						"MSG" : msg
+					});			
+				}
+			});
+		}else{
+			db_umenu.add_one(data, function(check, msg){
+				if(check){
+					res.json({
+						"Result" : msg
+					});	
+				}else{
+					res.json({
+						"Result" : "Add Fail",
+						"MSG" : msg
+					});			
+				}
+			});
+		}
+	}else{
+		res.json({
+			"Result" : "로그인 먼저 하소~"
 		});
+	}
+});
+
+router.post("/delete", function(req, res, next){
+	logger.info('req.body', req.body);
+	var umb_no = req.body.Umb_No;
+	var umenu_no = req.body.Umenu_No;
+	var data = [umb_no, umenu_no];
+
+	if(req.session.log_data){
+		if(umenu_no instanceof Array){
+			db_umenu.delete(data, function(check, msg){
+				if(check){
+					res.json({
+						"Result" : msg
+					});	
+				}else{
+					res.json({
+						"Result" : "Delete Fail",
+						"MSG" : msg
+					});			
+				}
+			});
+		}else{
+			db_umenu.delete_one(data, function(check, msg){
+				if(check){
+					res.json({
+						"Result" : msg
+					});	
+				}else{
+					res.json({
+						"Result" : "Delete Fail",
+						"MSG" : msg
+					});			
+				}
+			});
+		}
 	}else{
 		res.json({
 			"Result" : "로그인 먼저 하소~"
@@ -262,18 +318,46 @@ router.post("/add", function(req, res, next){
 	}
 });
 
-router.post("/delete", function(req, res, next){
+router.post("/transfer", function(req, res, next){
 	logger.info('req.body', req.body);
+	var umb_no_be = req.body.Umb_No_Be;
+	var umb_no_af = req.body.Umb_No_Af;
 	var umenu_no = req.body.Umenu_No;
+	var menu_no = req.body.Menu_No;
+	var data = [umb_no_be, umb_no_af, umenu_no, menu_no];
 
-	if(true){
-		res.json({
-			"Result" : "Delete Success"
-		});
+	if(req.session.log_data){
+		if(umenu_no instanceof Array){
+			db_umenu.transfer(data, function(check, msg){
+				if(check){
+					res.json({
+						"Result" : msg
+					});	
+				}else{
+					res.json({
+						"Result" : "transfer Fail",
+						"MSG" : msg
+					});			
+				}
+			});
+		}else{
+			db_umenu.transfer_one(data, function(check, msg){
+				if(check){
+					res.json({
+						"Result" : msg
+					});	
+				}else{
+					res.json({
+						"Result" : "transfer Fail",
+						"MSG" : msg
+					});			
+				}
+			});
+		}
 	}else{
 		res.json({
-			"Result" : "Delete Fail"
-		});
+			"Result" : "로그인 먼저 하소~"
+		})
 	}
 });
 

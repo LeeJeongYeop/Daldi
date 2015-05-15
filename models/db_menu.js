@@ -162,6 +162,47 @@ exports.star_delete = function(data, done){
 };
 
 /*****************************/
+/*		메뉴 상세 정보 		    */ 
+/***************************/
+exports.detail = function(data, done){
+	var check = true;
+	var msg = "";
+	pool.getConnection(function(err, conn){
+		if(err){  // DB 연결 오류
+			logger.error('err',err);
+			check = false;
+			msg = "DB connect error";
+			done(check, msg);
+			conn.release();
+		}else{
+			var sql = "select umb.umb_title, m.menu_no, m.menu_name, m.menu_image_1, m.menu_price, c.cafe_name, um.umenu_no "
+			+ "from wm_user_menu_board umb, wm_cafe c, wm_menu m, wm_user_menu um "
+			+ "where um.umb_no = umb.umb_no and um.menu_no=m.menu_no and c.cafe_no=m.cafe_no and umb.umb_no=?";
+			conn.query(sql, data, function(err, row){
+				if(err){  // 내 메뉴판 메뉴 리스트 DB 입력시 오류
+					logger.error('err', err);
+					check = false;
+					msg = "내 메뉴판 메뉴 리스트 DB 입력 오류";
+					done(check ,msg);
+					conn.release();
+				}else{
+					logger.info('row', row);
+					if(row){  // 내 메뉴판 메뉴 리스트 OK
+						done(check, row);
+						conn.release();
+					}else{  // 내 메뉴판 메뉴 리스트 DB 오류
+						check = false;
+						msg = "DB 오류 다시 시도해주세요.";
+						done(check, msg);
+						conn.release();
+					}
+				}
+			});
+		}
+	});	
+}
+
+/*****************************/
 /*			팁 추가 		    */ 
 /***************************/
 exports.tip_write = function(data, done){
