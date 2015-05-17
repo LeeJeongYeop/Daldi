@@ -3,6 +3,7 @@ var router = express.Router();
 var mysql = require('mysql');
 var db_menu = require('../models/db_menu');
 var fs = require('fs');
+var multer = require('multer');
 var logger = require('../logger');
 
 /* GET home page. */
@@ -15,9 +16,23 @@ router.get('/', function(req, res, next) {
 	res.render('index', { title: 'Express' });
 });
 
+router.use(multer({
+	dest: './public/images/menu_user',
+	rename: function (fieldname, filename) {
+		return filename.toLowerCase() + Date.now();
+	}
+}));
+
 router.get('/:IMG_NAME', function (req, res) {
 	var imgName = req.params.IMG_NAME;
 	var img = fs.readFileSync('./public/images/menu/' + imgName + '.jpg');
+	res.writeHead(200, {'Content-Type': 'image/jpg'});
+	res.end(img, 'binary');
+});
+
+router.get('/userimg/:IMG_NAME', function (req, res) {
+	var imgName = req.params.IMG_NAME;
+	router.get('/public/images/menu/' + imgName + '.jpg');
 	res.writeHead(200, {'Content-Type': 'image/jpg'});
 	res.end(img, 'binary');
 });
@@ -51,7 +66,7 @@ router.post('/star/add', function(req, res, next){
 });
 
 router.post("/star/delete", function(req, res, next){
-	console.log('req.body', req.body);
+	logger.info('req.body', req.body);
 	var user_no = req.session.log_data.user_no;
 	var menu_no = req.body.Menu_No;
 	var data = [user_no, menu_no];
@@ -77,55 +92,28 @@ router.post("/star/delete", function(req, res, next){
 });
 
 router.post("/detail", function(req, res, next){
-	console.log('req.body', req.body);
+	logger.info('req.body', req.body);
 	var menu_no = req.body.Menu_No;
+	var data = menu_no;
 
-	if(true){
-		res.json({
-			"Menu_Name" : "초코케익",
-			"Menu_Price" : "4000",
-			"Menu_Img" : ["http://52.68.54.75:3000/menu/ok1","http://52.68.54.75:3000/menu/ok2","http://52.68.54.75:3000/menu/ok3","http://52.68.54.75:3000/menu/ok4", "http://52.68.54.75:3000/menu/ok5"],
-			"Menu_Info" : "맛있는 초코 케익입니다.",
-			"Cafe_Name" : "장블랑제리",
-			"Cafe_Tel" : "02-1234-1234",
-			"Cafe_Address" : "서울시 마포구 홍대입구역",
-			"Cafe_Open" : "07:00",
-			"Cafe_Close" : "23:00",
-			"Cafe_In_Img" : "http://52.68.54.75:3000/menu/c1",
-			"Cafe_Out_Img" : "http://52.68.54.75:3000/menu/c2",
-			"Cafe_Menu_List" : [
-			{"Menu_Name" : "딸기케익", "Menu_Price" : "3000", "Menu_Img" : "http://52.68.54.75:3000/menu/p1"},
-			{"Menu_Name" : "왕초밥", "Menu_Price" : "10000", "Menu_Img" : "http://52.68.54.75:3000/menu/p3"}
-			],
-			"Star_Man" : "4", 
-			"Star_Woman" : "5",
-			"Keyword1_count" : "10",
-			"Keyword2_count" : "20",
-			"Keyword3_count" : "30",
-			"Keyword4_count" : "15",
-			"Keyword5_count" : "14",
-			"Keyword6_count" : "22",
-			"Keyword7_count" : "32",
-			"Keyword8_count" : "55",
-			"Keyword9_count" : "90",
-			"Keyword10_count" : "12",
-			"Keyword11_count" : "32",
-			"Keyword12_count" : "2",
-			"Keyword13_count" : "6",
-			"Keyword14_count" : "90",
-			"Keyword15_count" : "102",
-			"Tip_List" :
-			[
-			{"Tip_Title" : "맛있어요!", "Tip_Regdate" : "2015-04-30", "Tip_Like_Count" : "4"},
-			{"Tip_Title" : "딱좋아요!", "Tip_Regdate" : "2015-05-01", "Tip_Like_Count" : "3"}
-			]
-
-		});
-}else{
-	res.json({
-		"Result" : "Detail Fail"
+	db_menu.detail(data, function(check, row1, menu_img, cafe_img, row2, star, keyword, tip, best_tip){
+		if(check){
+			res.json({
+				"List1" : row1,
+				"Menu_Img" : menu_img,
+				"Cafe_Img" : cafe_img,
+				"List2" : row2,
+				"Star" : star,
+				"Keyword" : keyword,
+				"Tip" : tip,
+				"Best_Tip" : best_tip
+			});	
+		}else{
+			res.json({
+				"Result" : "Detail Fail"
+			});	
+		}
 	});
-}
 });
 
 router.post("/tip/write", function(req, res, next){
@@ -182,32 +170,53 @@ router.post("/tip/update", function(req, res, next){
 });
 
 router.post("/tip/like", function(req, res, next){
-	console.log('req.body', req.body);
-	var tip_no = req.body.Tip_No;
-	var tip_point = req.body.Tip_Point;
+	if(req.session.log_data){
+		logger.info('req.body', req.body);
+		var user_no = req.session.log_data.user_no;
+		var tip_no = req.body.Tip_No;
+		var data = [user_no, tip_no];
 
-	if(true){
-		res.json({
-			"Result" : "Tip Like Success"
+		db_menu.tip_like(data, function(check, msg){
+			if(check){
+				res.json({
+					"Result" : msg
+				});
+			}else{
+				res.json({
+					"Result" : "Tip Like Fail",
+					"msg" : msg
+				});
+			}
 		});
 	}else{
 		res.json({
-			"Result" : "Tip Like Fail"
+			"Result" : "로그인 먼저 하소~"
 		});
 	}
 });
 
 router.post("/tip/like/delete", function(req, res, next){
-	console.log('req.body', req.body);
-	var tip_no = req.body.Tip_No;
+	if(req.session.log_data){
+		logger.log('req.body', req.body);
+		var user_no = req.session.log_data.user_no;
+		var tip_no = req.body.Tip_No;
+		var data = [user_no, tip_no];
 
-	if(true){
-		res.json({
-			"Result" : "Tip Like Delete Success"
+		db_menu.tip_like_delete(data, function(check, msg){
+			if(check){
+				res.json({
+					"Result" : msg
+				});
+			}else{
+				res.json({
+					"Result" : "Tip Like Delete Fail",
+					"msg" : msg
+				});
+			}
 		});
 	}else{
 		res.json({
-			"Result" : "Tip Like Delete Fail"
+			"Result" : "로그인 먼저 하소~"
 		});
 	}
 });
@@ -258,35 +267,5 @@ router.post("/keyword/delete", function(req, res, next){
 	}
 });
 
-router.post("/user/img", function(req, res, next){
-	console.log('req.body', req.body);
-	var menu_no = req.body.Menu_No;
-
-	if(true){
-		res.json({
-			"Menu_User_Img" : ["http://52.68.54.75:3000/menu/ok1","http://52.68.54.75:3000/menu/ok2","http://52.68.54.75:3000/menu/ok3","http://52.68.54.75:3000/menu/ok4", "http://52.68.54.75:3000/menu/ok5"]
-		});
-	}else{
-		res.json({
-			"Result" : "Menu User Image List Fail"
-		});
-	}
-});
-
-router.post("/user/img/add", function(req, res, next){
-	console.log('req.body', req.body);
-	var menu_no = req.body.Menu_No;
-	var menu_img = req.body.Menu_Img;
-
-	if(true){
-		res.json({
-			"Result" : "Menu User Image Add Success"
-		});
-	}else{
-		res.json({
-			"Result" : "Menu User Image Add Fail"
-		});
-	}
-});
 
 module.exports = router;
