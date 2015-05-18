@@ -176,3 +176,126 @@ exports.cafe_search = function(data, done){
 		}
 	});
 };
+
+/*****************************/
+/*		  메뉴 전체		    */ 
+/***************************/
+exports.menu_auto_search = function(data, done){
+	var check = true;
+	var msg = "";
+
+	pool.getConnection(function(err, conn){
+		if(err){  // DB 연결 오류
+			logger.error('err',err);
+			check = false;
+			msg = "DB connect error";
+			done(check, msg);
+			conn.release();
+		}else{
+			logger.info('data', data);
+			var sql = "select DISTINCT menu_name from wm_menu";
+			conn.query(sql, function(err, row){
+				if(err){  
+					logger.error('err', err);
+					check = false;
+					msg = "메뉴 팁 목록 DB 입력시 오류";
+					done(check ,msg);
+					conn.release();
+				}else{
+					logger.info('row', row);
+					if(row){
+						done(check, row);
+						conn.release();
+					}else{
+						check = false;
+						msg = "DB 오류 다시 시도해주세요.";
+						done(check, msg);
+						conn.release();
+					}
+				}
+			});	
+		}
+	});
+};
+
+/*****************************/
+/*		  지역 전체		    */ 
+/***************************/
+exports.area_auto_search = function(data, done){
+	var check = true;
+	var msg = "";
+
+	pool.getConnection(function(err, conn){
+		if(err){  // DB 연결 오류
+			logger.error('err',err);
+			check = false;
+			msg = "DB connect error";
+			done(check, msg);
+			conn.release();
+		}else{
+			logger.info('data', data);
+			var sql = "select DISTINCT cafe_area from wm_cafe";
+			conn.query(sql, function(err, row){
+				if(err){s
+					logger.error('err', err);
+					check = false;
+					msg = "메뉴 팁 목록 DB 입력시 오류";
+					done(check ,msg);
+					conn.release();
+				}else{
+					logger.info('row', row);
+					if(row){
+						done(check, row);
+						conn.release();
+					}else{
+						check = false;
+						msg = "DB 오류 다시 시도해주세요.";
+						done(check, msg);
+						conn.release();
+					}
+				}
+			});	
+		}
+	});
+};
+
+/*****************************/
+/*		  카페 전체		    */ 
+/***************************/
+exports.cafe_auto_search = function(data, done){
+	var check = true;
+	var msg = "";
+
+	pool.getConnection(function(err, conn){
+		if(err){  // DB 연결 오류
+			logger.error('err',err);
+			check = false;
+			msg = "DB connect error";
+			done(check, msg);
+			conn.release();
+		}else{
+			logger.info('data', data);
+			var sql = "select DISTINCT cafe_name from wm_cafe";
+			conn.query(sql, function(err, row){
+				if(err){s
+					logger.error('err', err);
+					check = false;
+					msg = "메뉴 팁 목록 DB 입력시 오류";
+					done(check ,msg);
+					conn.release();
+				}else{
+					logger.info('row', row);
+					if(row){
+						done(check, row);
+						conn.release();
+					}else{
+						check = false;
+						msg = "DB 오류 다시 시도해주세요.";
+						done(check, msg);
+						conn.release();
+					}
+				}
+			});	
+		}
+	});
+};
