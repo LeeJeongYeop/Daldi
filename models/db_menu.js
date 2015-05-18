@@ -4,6 +4,7 @@ var mysql = require('mysql');
 var logger = require('../logger');
 var db_config = require('./db_config');
 var pool = mysql.createPool(db_config);
+var fs = require('fs');
 var async = require('async');
 
 /*****************************/
@@ -178,8 +179,8 @@ exports.detail = function(data, done){
 		}else{
 			async.waterfall([
 				function(callback){
-					var sql = "select m.menu_no, m.menu_name, m.menu_information, m.menu_price, "
-					+ "c.cafe_name, c.cafe_tel, c.cafe_address, c.cafe_open, c.cafe_close, c.cafe_out_img, c.cafe_in_img, c.cafe_img "
+					var sql = "select m.menu_no, m.menu_name, m.menu_englishname, m.menu_information, m.menu_price, "
+					+ "c.cafe_name, c.cafe_tel, c.cafe_address, c.cafe_open, c.cafe_close, c.cafe_lat, c.cafe_lon "
 					+ "from wm_cafe c, wm_menu m "
 					+ "where c.cafe_no=m.cafe_no and m.menu_no=?";
 					conn.query(sql, data, function(err, row1){
@@ -258,60 +259,92 @@ exports.detail = function(data, done){
 					});
 				},
 				function(row1, menu_img, cafe_img, row2, star, callback){
-					var sql = "select keyword_1, keyword_2, keyword_3, keyword_4, keyword_5, keyword_6, keyword_7, keyword_8, keyword_9, keyword_10, keyword_11, keyword_12 "
+					var keyword = [];
+					var sql = "select FIELD(GREATEST(kw1, kw2, kw3, kw4, kw_f1), kw1, kw2, kw3, kw4, kw_f1) idx_1, "
+					+ "FIELD(GREATEST(kw5, kw6, kw7, kw8, kw_f2), kw5, kw6, kw7, kw8, kw_f2) idx_2, "
+					+ "FIELD(GREATEST(kw9, kw10, kw11, kw_f3), kw9, kw10, kw11, kw_f3) idx_3, "
+					+ "FIELD(GREATEST(kw12, kw13, kw14, kw_f4), kw12, kw13, kw14, kw_f4) idx_4 "
 					+ "from wm_menu_keyword "
 					+ "where menu_no=?"
-					conn.query(sql, data, function(err, keyword){
+					conn.query(sql, data, function(err, kw_row){
 						if(err){
 							logger.info("keyword 에러");
 							callback(err);
 						}else{
-							logger.info("keyword", keyword);
-							callback(null, row1, menu_img, cafe_img, row2, star, keyword);
+							logger.info("kw_row", kw_row);
+							switch(kw_row[0].idx_1){
+								case 1 : keyword.push(0); break;
+								case 2 : keyword.push(1); break;
+								case 3 : keyword.push(2); break;
+								case 4 : keyword.push(3); break;
+								case 5 : keyword.push(100); break;
+							}
+							switch(kw_row[0].idx_2){
+								case 1 : keyword.push(4); break;
+								case 2 : keyword.push(5); break;
+								case 3 : keyword.push(6); break;
+								case 4 : keyword.push(7); break;
+								case 5 : keyword.push(100); break;
+							}
+							switch(kw_row[0].idx_3){
+								case 1 : keyword.push(8); break;
+								case 2 : keyword.push(9); break;
+								case 3 : keyword.push(10); break;
+								case 4 : keyword.push(100); break;
+							}
+							switch(kw_row[0].idx_4){
+								case 1 : keyword.push(11); break;
+								case 2 : keyword.push(12); break;
+								case 3 : keyword.push(13); break;
+								case 4 : keyword.push(100); break;
+							}
 						}
+						logger.info("keyword", keyword);
+						callback(null, row1, menu_img, cafe_img, row2, star, keyword);
 					});
-				},
-				function(row1, menu_img, cafe_img, row2, star, keyword, callback){
-					var sql = "select tip_no, tip_title, date_format(tip_regdate,'%Y-%m-%d') tip_regdate, tip_cnt "
-					+ "from wm_menu_tip "
-					+ "where menu_no = ?";
-					conn.query(sql, [data, data], function(err, tip){
-						if(err){
-							logger.info("tip 에러");
-							callback(err);
-						}else{
-							logger.info("tip", tip);
-							callback(null, row1, menu_img, cafe_img, row2, star, keyword, tip);
-						}
-					});
-				},
-				function(row1, menu_img, cafe_img, row2, star, keyword, tip, callback){
-					var sql = "select tip_no, tip_title, date_format(tip_regdate,'%Y-%m-%d') tip_regdate, tip_cnt "
-					+ "from wm_menu_tip "
-					+ "where menu_no = ? and tip_cnt = (select MAX(tip_cnt) from wm_menu_tip where menu_no = ? )"
-					conn.query(sql, [data, data], function(err, best_tip){
-						if(err){
-							logger.info("best_tip 에러");
-							callback(err);
-						}else{
-							logger.info("best_tip", best_tip);
-							callback(null, row1, menu_img, cafe_img, row2, star, keyword, tip, best_tip);
-						}
-					});
-				}
-				],
-				function(err, row1, menu_img, cafe_img, row2, star, keyword, tip, best_tip, callback){
-					if(err){
-						logger.error('err', err);
-						check = false;
-						msg = "메뉴 자세히 보기 DB 입력 오류";
-						done(check);
-						conn.release();
-					}else{
-						done(check, row1, menu_img, cafe_img , row2, star, keyword, tip, best_tip);
-						conn.release();
-					}
-				});
+},
+function(row1, menu_img, cafe_img, row2, star, keyword, callback){
+	var sql = "select tip_no, tip_title, date_format(tip_regdate,'%Y-%m-%d') tip_regdate, tip_cnt "
+	+ "from wm_menu_tip "
+	+ "where menu_no = ?";
+	conn.query(sql, [data, data], function(err, tip){
+		if(err){
+			logger.info("tip 에러");
+			callback(err);
+		}else{
+			logger.info("tip", tip);
+			callback(null, row1, menu_img, cafe_img, row2, star, keyword, tip);
+		}
+	});
+},
+function(row1, menu_img, cafe_img, row2, star, keyword, tip, callback){
+	var sql = "select tip_no, tip_title, date_format(tip_regdate,'%Y-%m-%d') tip_regdate, tip_cnt "
+	+ "from wm_menu_tip "
+	+ "where menu_no = ? and tip_cnt = (select MAX(tip_cnt) from wm_menu_tip where menu_no = ? ) "
+	+ "order by tip_regdate desc limit 1 "
+	conn.query(sql, [data, data], function(err, best_tip){
+		if(err){
+			logger.info("best_tip 에러");
+			callback(err);
+		}else{
+			logger.info("best_tip", best_tip);
+			callback(null, row1, menu_img, cafe_img, row2, star, keyword, tip, best_tip);
+		}
+	});
+}
+],
+function(err, row1, menu_img, cafe_img, row2, star, keyword, tip, best_tip, callback){
+	if(err){
+		logger.error('err', err);
+		check = false;
+		msg = "메뉴 자세히 보기 DB 입력 오류";
+		done(check);
+		conn.release();
+	}else{
+		done(check, row1, menu_img, cafe_img , row2, star, keyword, tip, best_tip);
+		conn.release();
+	}
+});
 }
 });	
 }
@@ -575,15 +608,38 @@ exports.tip_like_delete = function(data, done){
 			});
 		}
 	});	
-}
+};
 
 /*****************************/
 /*		메뉴 사용자 사진 	    */
 /***************************/
 exports.user_img = function(data, done){
 	var check = true;
-	var msg = "";	
-}
+	var msg = "";
+	pool.getConnection(function(err, conn){
+		if(err){  // DB 연결 오류
+			logger.error('err',err);
+			check = false;
+			msg = "DB connect error";
+			done(check, msg);
+			conn.release();
+		}else{
+			var sql = "select user_no, img_no, img_img from wm_menu_user_img where menu_no = ?";
+			conn.query(sql, data, function(err, row){
+				if(err){  // 메뉴 사용사 사진 리스트 DB 입력 오류
+					logger.error('err', err);
+					check = false;
+					msg = "메뉴 사용사 사진 리스트 DB 입력 오류";
+					done(check, msg);
+					conn.release();
+				}else{
+					done(check, row);
+					conn.release();
+				}
+			});
+		}
+	});
+};
 
 /*****************************/
 /*		메뉴 사용자 사진 추가	    */
@@ -591,4 +647,133 @@ exports.user_img = function(data, done){
 exports.user_img_add = function(data, done){
 	var check = true;
 	var msg = "";
+	pool.getConnection(function(err, conn){
+		if(err){  // DB 연결 오류
+			logger.error('err',err);
+			check = false;
+			msg = "DB connect error";
+			done(check, msg);
+			conn.release();
+		}else{
+			logger.info('data',data);
+			var sql = "insert into wm_menu_user_img(user_no, menu_no, img_img) values(?,?,?)";
+			conn.query(sql, data, function(err, row){
+				if(err){  // 메뉴 사진 추가 DB 입력시 오류
+					logger.error('err', err);
+					check = false;
+					msg = "메뉴 사진 추가 DB 입력 오류";
+					done(check, msg);
+					conn.release();
+				}else{
+					logger.info('row', row);
+					if(row.affectedRows == 1){ //메뉴 사용자 사진 추가 ok
+						msg = "Menu User Image Add Success";
+						done(check, msg);
+						conn.release();
+					}else{  //메뉴 사용자 사진 추가 DB 오류
+						check = false;
+						msg = "메뉴판 사용자 사진 추가 DB 오류";
+						done(check, msg);
+						conn.release();
+					}
+				}
+			});
+		}
+	});
+};
+
+/*****************************/
+/*		메뉴 사용자 사진 삭제     */
+/***************************/
+exports.user_img_delete = function(data, done){
+	var check = true;
+	var msg = "";
+	pool.getConnection(function(err, conn){
+		if(err){  // DB 연결 오류
+			logger.error('err',err);
+			check = false;
+			msg = "DB connect error";
+			done(check, msg);
+			conn.release();
+		}else{
+			async.waterfall([
+				function(callback){
+					logger.info('data',data);
+					var sql = "select count(*) cnt from wm_menu_user_img where user_no=? and img_no=?";
+					conn.query(sql, data, function(err, count){
+						if(err){
+							msg = "사진 등록자 확인 DB 입력 오류";
+							callback(err, msg);
+						}else{
+							callback(null, count);
+						}
+					});
+				},
+				function(count, callback){
+					logger.info('count[0].cnt', count[0].cnt);
+					if(count[0].cnt == 1){
+						var sql  = "select img_img from wm_menu_user_img where img_no=?";
+						conn.query(sql, data[1], function(err, img){
+							if(err){
+								msg = "기존 메뉴 사진 불러올 때 데이터 입력 오류";
+								callback(err, msg);
+							}else{
+								callback(null, img);
+							}
+						});
+					}else{
+						logger.info('count[0].cnt', count[0].cnt);
+						msg = "사진 등록자가 아닙니다.";
+						callback(err, msg);
+					}
+				},
+				function(img, callback){
+					logger.info('img', img);
+					if(img[0].img_img){
+						var pathArr = img[0].img_img.split('/');
+						var fileName = pathArr[pathArr.length-1];
+						var filePath = "./public/images/menu_user/"+fileName;
+						fs.unlink(filePath, function(err){
+							if(err){
+								msg = "메뉴 사진 파일 삭제 에러";
+								callback(err, msg);
+							}else{
+								var sql= "delete from wm_menu_user_img where img_no=?";
+								conn.query(sql, data[1], function(err, row){
+									if(err){
+										msg = "메뉴 사진 DB 삭제 에러";
+										callback(err, msg);
+									}else{
+										if(row.affectedRows == 1){
+											msg = "Menu User Image Delete Success";
+											callback(null, msg);
+										}else{
+											msg = "메뉴 사진 삭제 에러";
+											callback(err, msg);
+										}
+									}
+								});
+							}
+						});
+					}else{
+						msg = "사진 등록된 경로 에러";
+						callback(err, msg);
+					}
+				}
+				],
+				function(err, result){
+					if(err){
+						logger.error(err);
+						check = false;
+						done(check, result);
+						conn.release();
+					}else{
+						logger.info('check', check);
+						done(check, result);
+						conn.release();
+					}
+				});
+
 }
+});
+};

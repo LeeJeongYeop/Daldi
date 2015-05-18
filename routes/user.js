@@ -157,11 +157,15 @@ router.post("/find/password", function(req, res, next){
 
 router.post("/info", function(req, res, next){
 	if(req.session.log_data){
+		user_no = req.session.log_data.user_no;
+		user_id = req.session.log_data.user_id;
 		user_name = req.session.log_data.user_name;
 		user_gender = req.session.log_data.user_gender;
 		user_email = req.session.log_data.user_email;
 		logger.info('user_name', user_name, 'user_gender', user_gender, 'user_email', user_email);
 		res.json({
+			"User_No" : user_no,
+			"User_ID" : user_id,
 			"User_Name" : user_name,
 			"User_Gender" : user_gender,
 			"User_Email" : user_email

@@ -88,7 +88,13 @@ exports.board_delete = function(data, done){
 								var filePath = "./public/images/umenu_board/"+fileName;
 								logger.info('fileName', fileName);
 								fs.unlink(filePath, function(err){
-									if(err){ logger.error('err',err); }
+									if(err){ 
+										logger.error('err',err);
+										check = false;
+										msg = "내 메뉴판 사진 삭제 오류";
+										done(check ,msg);
+										conn.release();
+									}
 									var sql = "delete from wm_user_menu_board where umb_no=?";
 									conn.query(sql, data, function(err, row){
 										if(err){  // 내 메뉴판  DB 입력시 오류

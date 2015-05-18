@@ -30,9 +30,9 @@ router.get('/:IMG_NAME', function (req, res) {
 	res.end(img, 'binary');
 });
 
-router.get('/userimg/:IMG_NAME', function (req, res) {
+router.get('/userImg/:IMG_NAME', function (req, res) {
 	var imgName = req.params.IMG_NAME;
-	router.get('/public/images/menu/' + imgName + '.jpg');
+	var img = fs.readFileSync('./public/images/menu_user/' + imgName);
 	res.writeHead(200, {'Content-Type': 'image/jpg'});
 	res.end(img, 'binary');
 });
@@ -251,21 +251,102 @@ router.post("/keyword/select", function(req, res, next){
 	}
 });
 
-router.post("/keyword/delete", function(req, res, next){
-	console.log('req.body', req.body);
-	var menu_no = req.body.Menu_No;
-	var keyword1 = req.body.Keyword1;
+// router.post("/keyword/delete", function(req, res, next){
+// 	console.log('req.body', req.body);
+// 	var menu_no = req.body.Menu_No;
+// 	var keyword1 = req.body.Keyword1;
 
-	if(true){
-		res.json({
-			"Result" : "Keyword Select Success"
-		});
+// 	if(true){
+// 		res.json({
+// 			"Result" : "Keyword Select Success"
+// 		});
+// 	}else{
+// 		res.json({
+// 			"Result" : "Keyword Select Fail"
+// 		});
+// 	}
+// });
+
+
+router.post("/user/img", function(req, res, next){
+	logger.info('req.body', req.body);
+	var menu_no = req.body.Menu_No;
+	var data = menu_no;
+
+	db_menu.user_img(data, function(check, row){
+		if(check){
+			res.json({
+				"Menu_User_Img" : row
+			});
+		}else{
+			res.json({
+				"Result" : "Menu User Image List Fail",
+				"msg" : row
+			});
+		}
+	});
+});
+
+router.post("/user/img/add", function(req, res, next){
+	if(req.session.log_data){
+		logger.info('req.body', req.body);
+		logger.info('req.files', req.files);
+		var user_no = req.session.log_data.user_no;
+		var menu_no = req.body.Menu_No;
+		if(req.files.Menu_User_Img){
+			var filename = req.files.Menu_User_Img.name;
+			var file_path = 'http://52.68.54.75/menu/userImg/'+filename;
+			var data = [user_no, menu_no, file_path];
+
+			db_menu.user_img_add(data, function(check, msg){
+				if(check){
+					res.json({
+						"Result" : msg
+					});
+				}else{
+					res.json({
+						"Result" : "Menu User Image Add Fail",
+						"msg" : msg
+					});
+				}
+			});
+		}else{
+			res.json({
+				"Result" : "Menu User Image Add Fail",
+				"msg" : "사진을 추가해 주세요."
+			});
+		}
 	}else{
 		res.json({
-			"Result" : "Keyword Select Fail"
+			"Result" : "로그인 먼저 하소~"
 		});
 	}
 });
 
+router.post("/user/img/delete", function(req, res, next){
+	if(req.session.log_data){
+		logger.info('req.body', req.body);
+		var user_no = req.session.log_data.user_no;
+		var img_no = req.body.Img_No;
+		var data = [user_no, img_no];
+
+		db_menu.user_img_delete(data, function(check, msg){
+			if(check){
+				res.json({
+					"Result" : msg
+				});
+			}else{
+				res.json({
+					"Result" : "Menu User Image Delete Fail",
+					"msg" : msg
+				});
+			}
+		});
+	}else{
+		res.json({
+			"Result" : "로그인 먼저 하소~"
+		});
+	}
+});
 
 module.exports = router;

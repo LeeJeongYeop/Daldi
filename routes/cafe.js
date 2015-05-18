@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var mysql = require('mysql');
+var fs = require('fs');
 var db_cafe = require('../models/db_cafe');
 var logger = require('../logger');
 
@@ -12,6 +13,13 @@ var logger = require('../logger');
 
 router.get('/', function(req, res, next) {
 	res.render('index', { title: 'Express' });
+});
+
+router.get('/:IMG_NAME', function (req, res) {
+	var imgName = req.params.IMG_NAME;
+	var img = fs.readFileSync('./public/images/cafe/' + imgName + '.jpg');
+	res.writeHead(200, {'Content-Type': 'image/jpg'});
+	res.end(img, 'binary');
 });
 
 router.post('/compare', function(req, res, next){
