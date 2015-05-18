@@ -609,6 +609,123 @@ exports.tip_like_delete = function(data, done){
 	});	
 };
 
+exports.keyword_select = function(data, done){
+	var check = true;
+	var msg = "";
+	pool.getConnection(function(err, conn){
+		if(err){  // DB 연결 오류
+			logger.error('err',err);
+			check = false;
+			msg = "DB connect error";
+			done(check, msg);
+			conn.release();
+		}else{
+			async.series([
+				function(callback){
+					var sql = "select "+ data[1] +" from wm_menu_keyword where menu_no = ?";
+					conn.query(sql, data[0], function(err, row){
+						if(err){  // 메뉴 사용사 사진 리스트 DB 입력 오류
+							msg = "DB 입력 오류";
+							callback(err, msg);
+						}else{
+							logger.info('row', row);
+							var sql = "update wm_menu_keyword set "+data[1]+"="+data[1]+"+1 where menu_no = ?";
+							conn.query(sql, data[0], function(err, row){
+								if(row.affectedRows == 1){
+									logger.info('row', row);
+									callback(null);
+								}else{
+									check = false;
+									done(check, result);
+									conn.release();
+								}
+							});
+						}
+					});
+				},
+				function(callback){
+					var sql = "select "+ data[2] +" from wm_menu_keyword where menu_no = ?";
+					conn.query(sql, data[0], function(err, row){
+						if(err){  // 메뉴 사용사 사진 리스트 DB 입력 오류
+							msg = "DB 입력 오류";
+							callback(err, msg);
+						}else{
+							logger.info('row', row);
+							var sql = "update wm_menu_keyword set "+data[2]+"="+data[2]+"+1 where menu_no = ?";
+							conn.query(sql, data[0], function(err, row){
+								if(row.affectedRows == 1){
+									logger.info('row', row);
+									callback(null);
+								}else{
+									check = false;
+									done(check, result);
+									conn.release();
+								}
+							});
+						}
+					});
+				},
+				function(callback){
+					var sql = "select "+ data[3] +" from wm_menu_keyword where menu_no = ?";
+					conn.query(sql, data[0], function(err, row){
+						if(err){  // 메뉴 사용사 사진 리스트 DB 입력 오류
+							msg = "DB 입력 오류";
+							callback(err, msg);
+						}else{
+							logger.info('row', row);
+							var sql = "update wm_menu_keyword set "+data[3]+"="+data[3]+"+1 where menu_no = ?";
+							conn.query(sql, data[0], function(err, row){
+								if(row.affectedRows == 1){
+									logger.info('row', row);
+									callback(null);
+								}else{
+									check = false;
+									done(check, result);
+									conn.release();
+								}
+							});
+						}
+					});
+				},
+				function(callback){
+					var sql = "select "+ data[4] +" from wm_menu_keyword where menu_no = ?";
+					conn.query(sql, data[0], function(err, row){
+						if(err){  // 메뉴 사용사 사진 리스트 DB 입력 오류
+							msg = "DB 입력 오류";
+							callback(err, msg);
+						}else{
+							logger.info('row', row);
+							var sql = "update wm_menu_keyword set "+data[4]+"="+data[4]+"+1 where menu_no = ?";
+							conn.query(sql, data[0], function(err, row){
+								if(row.affectedRows == 1){
+									logger.info('row', row);
+									callback(null);
+								}else{
+									check = false;
+									done(check, result);
+									conn.release();
+								}
+							});
+						}
+					});
+				}
+				],
+				function(err, result){
+					if(err){
+						check = false;
+						done(check, result);
+						conn.release();
+					}else{
+						logger.info('check', check);
+						msg = "Keyword Select Success";
+						done(check, msg);
+						conn.release();
+					}
+				});
+		}
+	});
+};
+
 /*****************************/
 /*		메뉴 사용자 사진 	    */
 /***************************/

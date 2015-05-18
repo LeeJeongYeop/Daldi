@@ -221,33 +221,27 @@ router.post("/tip/like/delete", function(req, res, next){
 });
 
 router.post("/keyword/select", function(req, res, next){
-	console.log('req.body', req.body);
+	logger.info('req.body', req.body);
 	var menu_no = req.body.Menu_No;
-	var keyword1 = req.body.Keyword1;
-	var keyword2 = req.body.Keyword2;
-	var keyword3 = req.body.Keyword3;
-	var keyword4 = req.body.Keyword4;
-	var keyword5 = req.body.Keyword5;
-	var keyword6 = req.body.Keyword6;
-	var keyword7 = req.body.Keyword7;
-	var keyword8 = req.body.Keyword8;
-	var keyword9 = req.body.Keyword9;
-	var keyword10 = req.body.Keyword10;
-	var keyword11 = req.body.Keyword11;
-	var keyword12 = req.body.Keyword12;
-	var keyword13 = req.body.Keyword13;
-	var keyword14 = req.body.Keyword14;
-	var keyword15 = req.body.Keyword15;
-
-	if(true){
-		res.json({
-			"Result" : "Keyword Select Success"
-		});
-	}else{
-		res.json({
-			"Result" : "Keyword Select Fail"
-		});
+	var keyword = req.body.Keyword;
+	for(var i=0; i<4; i++){
+		keyword[i] = "kw"+keyword[i];
 	}
+	var data = [menu_no, keyword[0], keyword[1], keyword[2], keyword[3]];
+
+	logger.info('data', data);
+	db_menu.keyword_select(data, function(check, msg){
+		if(check){
+			res.json({
+				"Result" : msg
+			});
+		}else{
+			res.json({
+				"Result" : "Keyword Select Fail",
+				"msg" : msg
+			});
+		}
+	});
 });
 
 // router.post("/keyword/delete", function(req, res, next){
