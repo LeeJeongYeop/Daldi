@@ -13,9 +13,8 @@ var async = require('async');
 exports.star_add = function(data, done){
 	var check = true;
 	var msg = "";
-	var data_check = [data[0], data[1]];
-	var data_input = [data[0], data[1], data[2]];
-	var user_gender = data[3];
+	var data_input = [data[0], data[1]];
+	var user_gender = data[2];
 	logger.info('user_gender', user_gender);
 
 	pool.getConnection(function(err, conn){
@@ -26,9 +25,9 @@ exports.star_add = function(data, done){
 			done(check, msg);
 			conn.release();
 		}else{  // 별점 중복 검사
-			logger.info('data_check', data_check);
+			logger.info('data_input', data_input);
 			var sql = "select count(*) cnt from wm_menu_star where user_no=? and menu_no=?";
-			conn.query(sql, data_check, function(err, row){
+			conn.query(sql, data_input, function(err, row){
 				if(err){  // 별점 중복 검사 데이터 입력 오류
 					logger.error('err', err);
 					check = false;
@@ -41,7 +40,7 @@ exports.star_add = function(data, done){
 						logger.info('user_gender', user_gender);
 						if(user_gender == 0){
 							logger.info('data_input', data_input);
-							var sql_man = "insert into wm_menu_star(user_no, menu_no, star_man, star_regdate) values(?,?,?,now())";
+							var sql_man = "insert into wm_menu_star(user_no, menu_no, star_man, star_regdate) values(?,?,1,now())";
 							conn.query(sql_man, data_input, function(err, row_man){
 							if(err){  // 메뉴 남자 별점 주기 DB 입력시 오류
 								logger.error('err', err);
@@ -64,7 +63,7 @@ exports.star_add = function(data, done){
 							}
 						});
 						}else{
-							var sql_woman = "insert into wm_menu_star(user_no, menu_no, star_woman, star_regdate) values(?,?,?,now())";
+							var sql_woman = "insert into wm_menu_star(user_no, menu_no, star_woman, star_regdate) values(?,?,1,now())";
 							conn.query(sql_woman, data_input, function(err, row_woman){
 							if(err){  // 메뉴 여자 별점 주기 DB 입력시 오류
 								logger.error('err', err);
@@ -245,7 +244,7 @@ exports.detail = function(data, done){
 					});
 				},
 				function(row1, menu_img, cafe_img, row2, callback){
-					var sql = "select AVG(s.star_man) star_man, AVG(s.star_woman) star_woman "
+					var sql = "select SUM(s.star_man) star_man, SUM(s.star_woman) star_woman "
 					+ "from wm_menu_star s, wm_menu m "
 					+ "where s.menu_no=m.menu_no and m.menu_no = ?"
 					conn.query(sql, data, function(err, star){

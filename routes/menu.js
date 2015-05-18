@@ -38,14 +38,13 @@ router.get('/userImg/:IMG_NAME', function (req, res) {
 });
 
 router.post('/star/add', function(req, res, next){
-	logger.info('req.body', req.body);
-	var user_no = req.session.log_data.user_no;
-	var user_gender = req.session.log_data.user_gender;
-	var menu_no = req.body.Menu_No;
-	var star_point = req.body.Star_Point;
-	var data = [user_no, menu_no, star_point, user_gender];
-
 	if(req.session.log_data){
+		logger.info('req.body', req.body);
+		var user_no = req.session.log_data.user_no;
+		var user_gender = req.session.log_data.user_gender;
+		var menu_no = req.body.Menu_No;
+		var data = [user_no, menu_no, user_gender];
+
 		db_menu.star_add(data, function(check, msg){
 			if(check){
 				res.json({
@@ -66,12 +65,12 @@ router.post('/star/add', function(req, res, next){
 });
 
 router.post("/star/delete", function(req, res, next){
-	logger.info('req.body', req.body);
-	var user_no = req.session.log_data.user_no;
-	var menu_no = req.body.Menu_No;
-	var data = [user_no, menu_no];
-
 	if(req.session.log_data){
+		logger.info('req.body', req.body);
+		var user_no = req.session.log_data.user_no;
+		var menu_no = req.body.Menu_No;
+		var data = [user_no, menu_no];
+
 		db_menu.star_delete(data, function(check, msg){
 			if(check){
 				res.json({
