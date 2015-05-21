@@ -157,7 +157,7 @@ router.post("/tip/update", function(req, res, next){
 			}else{
 				res.json({
 					"Result" : "Tip Update Fail",
-					"msg" : msg
+					"MSG" : msg
 				});
 			}
 		});

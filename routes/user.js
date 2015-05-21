@@ -142,15 +142,30 @@ router.post("/login", function(req, res, next){
 
 router.post("/find/password", function(req, res, next){
 	logger.info('req.body', req.body);
-	var email = req.body.email;  // 프로토콜 정의서 x
+	if(req.session.log_data.user_joinpath == 0){
+		var user_no = req.session.log_data.user_no;
+		var email = req.body.User_Email;
+		var imsi = Math.floor(Math.random() * 1000000)+100000;
+		if(imsi>1000000){
+			imsi = imsi - 100000;
+		}
+		var data = [email, imsi, user_no];
 
-	if(true){
-		res.json({
-			"Result" : "Find Password Success"
+		db_user.find_password(data, function(check, msg){
+			if(check){
+				res.json({
+					"Result" : msg
+				});
+			}else{
+				res.json({
+					"Result" : "Find Password Fail",
+					"MSG" : msg
+				});	
+			}
 		});
 	}else{
 		res.json({
-			"Result" : "Find Password Fail"
+			"Result" : "Facebook User Fail"
 		});
 	}
 });

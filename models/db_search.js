@@ -4,6 +4,7 @@ var mysql = require('mysql');
 var logger = require('../logger');
 var db_config = require('./db_config');
 var pool = mysql.createPool(db_config);
+var async = require('async');
 
 /*****************************/
 /*			메뉴 검색		    */ 
@@ -178,9 +179,9 @@ exports.cafe_search = function(data, done){
 };
 
 /*****************************/
-/*		  메뉴 전체		    */ 
+/*		  랜덤 완성		    */ 
 /***************************/
-exports.menu_auto_search = function(data, done){
+exports.menu_random = function(data, done){
 	var check = true;
 	var msg = "";
 
@@ -219,9 +220,9 @@ exports.menu_auto_search = function(data, done){
 };
 
 /*****************************/
-/*		  지역 전체		    */ 
+/*		  자동 완성		    */ 
 /***************************/
-exports.area_auto_search = function(data, done){
+exports.auto_search = function(done){
 	var check = true;
 	var msg = "";
 
@@ -233,69 +234,64 @@ exports.area_auto_search = function(data, done){
 			done(check, msg);
 			conn.release();
 		}else{
-			logger.info('data', data);
-			var sql = "select DISTINCT cafe_area from wm_cafe";
-			conn.query(sql, function(err, row){
-				if(err){s
-					logger.error('err', err);
-					check = false;
-					msg = "메뉴 팁 목록 DB 입력시 오류";
-					done(check ,msg);
-					conn.release();
-				}else{
-					logger.info('row', row);
-					if(row){
-						done(check, row);
+			async.waterfall([
+				function(callback){
+					var sql = "select DISTINCT menu_name from wm_menu";
+					conn.query(sql, function(err, row1){
+						if(err){
+							callback(err);
+						}else{
+							logger.info('row', row1);
+							if(row1){
+								callback(null, row1);
+							}else{
+								callback(check, err);
+							}
+						}
+					});	
+				},
+				function(row1, callback){
+					var sql = "select DISTINCT cafe_name from wm_cafe";
+					conn.query(sql, function(err, row2){
+						if(err){
+							callback(err);
+						}else{
+							logger.info('row', row2);
+							if(row2){
+								callback(null, row1, row2);
+							}else{
+								callback(check, err);
+							}
+						}
+					});	
+				},
+				function(row1, row2, callback){
+					var sql = "select DISTINCT cafe_area from wm_cafe";
+					conn.query(sql, function(err, row3){
+						if(err){
+							callback(err);
+						}else{
+							logger.info('row', row3);
+							if(row3){
+								callback(null, row1, row2, row3);
+							}else{
+								callback(check, err);
+							}
+						}
+					});	
+				}
+				],
+				function(err, row1, row2, row3, callback){
+					if(err){
+						logger.error('err', err);
+						check = false;
+						done(check);
 						conn.release();
 					}else{
-						check = false;
-						msg = "DB 오류 다시 시도해주세요.";
-						done(check, msg);
+						done(check, row1, row2, row3);
 						conn.release();
 					}
-				}
-			});	
-		}
-	});
-};
-
-/*****************************/
-/*		  카페 전체		    */ 
-/***************************/
-exports.cafe_auto_search = function(data, done){
-	var check = true;
-	var msg = "";
-
-	pool.getConnection(function(err, conn){
-		if(err){  // DB 연결 오류
-			logger.error('err',err);
-			check = false;
-			msg = "DB connect error";
-			done(check, msg);
-			conn.release();
-		}else{
-			logger.info('data', data);
-			var sql = "select DISTINCT cafe_name from wm_cafe";
-			conn.query(sql, function(err, row){
-				if(err){s
-					logger.error('err', err);
-					check = false;
-					msg = "메뉴 팁 목록 DB 입력시 오류";
-					done(check ,msg);
-					conn.release();
-				}else{
-					logger.info('row', row);
-					if(row){
-						done(check, row);
-						conn.release();
-					}else{
-						check = false;
-						msg = "DB 오류 다시 시도해주세요.";
-						done(check, msg);
-						conn.release();
-					}
-				}
-			});	
-		}
-	});
-};
+				});
+}
+});
+}

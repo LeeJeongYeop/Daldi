@@ -99,7 +99,7 @@ router.post('/', function(req, res, next) {
 // });
 
 router.post('/random', function(req, res, next){
-	db_search.menu_auto_search(1, function(check, row){
+	db_search.menu_random(1, function(check, row){
 		if(check){
 			var menu = row;
 			var choice = new Array();
@@ -128,62 +128,21 @@ router.post('/random', function(req, res, next){
 
 router.post('/auto', function(req, res, next){
 	logger.log('req.body', req.body);
-	var search_check = req.body.Search_Check;
-	var data = search_check;
 
-	if(search_check == 0){
-		db_search.menu_auto_search(data, function(check, row){
-			if(check){
-				res.json({
-					"List" : row
-				});
-			}else{
-				res.json({
-					"Result" : "Fail",
-					"MSG" : row
-				})
-			}
-		});
-	}else if(search_check == 1){
-		db_search.area_auto_search(data, function(check, row){
-			if(check){
-				res.json({
-					"List" : row
-				});
-			}else{
-				res.json({
-					"Result" : "Fail",
-					"MSG" : row
-				});
-			}
-		});
-	}else if(search_check == 2){ // 임시
-		db_search.area_menu_auto_search(data, function(check, row){
-			if(check){
-				res.json({
-					"List" : row
-				});
-			}else{
-				res.json({
-					"Result" : "Fail",
-					"MSG" : row
-				});
-			}
-		});
-	}else{
-		db_search.cafe_auto_search(data, function(check, row){
-			if(check){
-				res.json({
-					"List" : row
-				});
-			}else{
-				res.json({
-					"Result" : "Fail",
-					"MSG" : row
-				});
-			}
-		});
-	}
+	db_search.auto_search(function(check, row1, row2, row3){
+		if(check){
+			res.json({
+				"List_Menu" : row1,
+				"List_Cafe" : row2,
+				"List_Area" : row3
+			});
+		}else{
+			res.json({
+				"Result" : "Fail",
+				"MSG" : row
+			});
+		}
+	});
 });
 
 module.exports = router;
