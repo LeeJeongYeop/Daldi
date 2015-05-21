@@ -34,6 +34,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// app.use(require('express-domain-middleware'));
+
 app.use(session({
   secret: 'keyboard cat',
   resave: false,
@@ -51,12 +53,26 @@ app.use('/menu', menu);
 app.use('/location', location);
 app.use('/cafe', cafe);
 
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  var err = new Error('Not Found');
-  err.status = 404;
-  next(err);
-});
+// app.use(function errorHandler(err, req, res, next) {
+//   log.info('error on request %d %s %s', process.domain.id, req.method, req.url);
+//   log.info(err.stack);
+//   // res.send(500, "Something bad happened. :(");
+//   // res.status(500).send("에러 발생 error = "+ err);
+//   var temp = err.stack;
+//   var error = temp.substring(0, temp.indexOf('\n'));
+//   res.status(500).json({'error':error});
+//   if(err.domain) {
+//     //you should think about gracefully stopping & respawning your server
+//     //since an unhandled error might put your application into an unknown state
+//   }
+// });
+
+// // catch 404 and forward to error handler
+// app.use(function(req, res, next) {
+//   var err = new Error('Not Found');
+//   err.status = 404;
+//   next(err);
+// });
 
 // error handlers
 

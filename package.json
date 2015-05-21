@@ -12,6 +12,7 @@
     "debug": "~2.1.1",
     "ejs": "~2.3.1",
     "express": "~4.12.2",
+    "express-domain-middleware": "^0.1.0",
     "express-session": "^1.11.1",
     "fbgraph": "^0.3.0",
     "moment": "^2.10.2",
