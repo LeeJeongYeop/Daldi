@@ -25,7 +25,7 @@ router.use(multer({
 
 router.get('/:IMG_NAME', function (req, res) {
 	var imgName = req.params.IMG_NAME;
-	var img = fs.readFileSync('./public/images/menu/' + imgName + '.jpg');
+	var img = fs.readFileSync('./public/images/menu/' + imgName);
 	res.writeHead(200, {'Content-Type': 'image/jpg'});
 	res.end(img, 'binary');
 });
@@ -340,6 +340,21 @@ router.post("/user/img/delete", function(req, res, next){
 			"Result" : "로그인 먼저 하소~"
 		});
 	}
+});
+
+router.post("/add", function(req, res, next){
+	db_menu.add(function(check, msg){
+		if(check){
+			res.json({
+				"Result" : msg
+			});
+		}else{
+			res.json({
+				"Result" : "Fail",
+				"msg" : msg
+			});
+		}
+	});
 });
 
 module.exports = router;

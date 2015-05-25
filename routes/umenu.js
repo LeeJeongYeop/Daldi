@@ -33,7 +33,7 @@ router.use(multer({
 
 router.get('/:IMG_NAME', function (req, res) {
 	var imgName = req.params.IMG_NAME;
-	var img = fs.readFileSync('./public/images/menu/' + imgName + '.JPG');
+	var img = fs.readFileSync('./public/images/menu/' + imgName);
 	res.writeHead(200, {'Content-Type': 'image/jpg'});
 	res.end(img, 'binary');
 });

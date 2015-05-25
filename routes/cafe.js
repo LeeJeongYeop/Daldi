@@ -17,7 +17,7 @@ router.get('/', function(req, res, next) {
 
 router.get('/:IMG_NAME', function (req, res) {
 	var imgName = req.params.IMG_NAME;
-	var img = fs.readFileSync('./public/images/cafe/' + imgName + '.jpg');
+	var img = fs.readFileSync('./public/images/cafe/' + imgName);
 	res.writeHead(200, {'Content-Type': 'image/jpg'});
 	res.end(img, 'binary');
 });

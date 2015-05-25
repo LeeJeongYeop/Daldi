@@ -2,6 +2,8 @@ var express = require('express');
 var router = express.Router();
 var mysql = require('mysql');
 var db_user = require('../models/db_user');
+var crypto = require('crypto');
+var _crypto = require('../models/db_crypto');
 var logger = require('../logger');
 
 /* GET home page. */
@@ -27,7 +29,7 @@ router.post('/join', function(req, res, next){
 	logger.info('req.body', req.body);
 	var user_name = req.body.User_Name;
 	var user_id = req.body.User_ID;
-	var user_password = req.body.User_Password;
+	var user_password = _crypto.do_ciper(req.body.User_Password);
 	var user_gender = req.body.User_Gender;
 	var join_path = 0;
 	var data = [user_id, user_password, user_name, user_gender, user_id, join_path];
@@ -113,7 +115,7 @@ router.post("/fb/join", function(req, res, next){
 router.post("/login", function(req, res, next){
 	logger.info('req.body', req.body);
 	var user_id = req.body.User_ID;
-	var user_password = req.body.User_Password;
+	var user_password = _crypto.do_ciper(req.body.User_Password);
 	var data = [user_id, user_password];
 	var null_check = 0;
 	null_check = data_check(data);

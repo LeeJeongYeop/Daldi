@@ -178,16 +178,16 @@ exports.detail = function(data, done){
 		}else{
 			async.waterfall([
 				function(callback){
-					var sql = "select m.menu_no, m.menu_name, m.menu_englishname, m.menu_information, m.menu_price, "
+					var sql = "select m.menu_no, m.menu_name, m.menu_englishname, m.menu_information, m.menu_price, m.menu_unit, "
 					+ "c.cafe_name, c.cafe_tel, c.cafe_address, c.cafe_open, c.cafe_close, c.cafe_lat, c.cafe_lon "
 					+ "from wm_cafe c, wm_menu m "
 					+ "where c.cafe_no=m.cafe_no and m.menu_no=?";
 					conn.query(sql, data, function(err, row1){
 						if(err){
-							logger.info("row1 에러");
+							logger.error("row1 에러");
 							callback(err);
 						}else{
-							logger.info("row1 ", row1);
+							// logger.info("row1 ", row1);
 							callback(null, row1);
 						}
 					});
@@ -198,7 +198,7 @@ exports.detail = function(data, done){
 					+ "where menu_no = ?";
 					conn.query(sql, data, function(err, menu_img){
 						if(err){
-							logger.info("menu_img 에러");
+							logger.error("menu_img 에러");
 							callback(err);
 						}else{
 							var img = [];
@@ -206,7 +206,7 @@ exports.detail = function(data, done){
 							img.push(menu_img[0].menu_image_2);
 							img.push(menu_img[0].menu_image_3);
 							img.push(menu_img[0].menu_image_4);
-							logger.info("menu_img ", img);
+							// logger.info("menu_img ", img);
 							callback(null, row1, img);
 						}
 					});
@@ -217,14 +217,14 @@ exports.detail = function(data, done){
 					+ "where cafe_no = ( select cafe_no from wm_menu where menu_no = ? )";
 					conn.query(sql, data, function(err, cafe_img){
 						if(err){
-							logger.info("cafe_img 에러");
+							logger.error("cafe_img 에러");
 							callback(err);
 						}else{
 							var img = [];
 							img.push(cafe_img[0].cafe_in_img);
 							img.push(cafe_img[0].cafe_out_img);
 							img.push(cafe_img[0].cafe_img);
-							logger.info("cafe_img ", img);
+							// logger.info("cafe_img ", img);
 							callback(null, row1, menu_img, img);
 						}
 					});
@@ -235,10 +235,10 @@ exports.detail = function(data, done){
 					+ "where cafe_no = ( select cafe_no from wm_menu where menu_no = ? )";
 					conn.query(sql, data, function(err, row2){
 						if(err){
-							logger.info("row2 에러");
+							logger.error("row2 에러");
 							callback(err);
 						}else{
-							logger.info("row2 ", row2);
+							// logger.info("row2 ", row2);
 							callback(null, row1, menu_img, cafe_img, row2);
 						}
 					});
@@ -249,10 +249,10 @@ exports.detail = function(data, done){
 					+ "where s.menu_no=m.menu_no and m.menu_no = ?"
 					conn.query(sql, data, function(err, star){
 						if(err){
-							logger.info("star 에러");
+							logger.error("star 에러");
 							callback(err);
 						}else{
-							logger.info("star", star);
+							// logger.info("star", star);
 							callback(null, row1, menu_img, cafe_img, row2, star);
 						}
 					});
@@ -267,10 +267,10 @@ exports.detail = function(data, done){
 					+ "where menu_no=?"
 					conn.query(sql, data, function(err, kw_row){
 						if(err){
-							logger.info("keyword 에러");
+							logger.error("keyword 에러");
 							callback(err);
 						}else{
-							logger.info("kw_row", kw_row);
+							// logger.info("kw_row", kw_row);
 							switch(kw_row[0].idx_1){
 								case 1 : keyword.push(0); break;
 								case 2 : keyword.push(1); break;
@@ -298,7 +298,7 @@ exports.detail = function(data, done){
 								case 4 : keyword.push(100); break;
 							}
 						}
-						logger.info("keyword", keyword);
+						// logger.info("keyword", keyword);
 						callback(null, row1, menu_img, cafe_img, row2, star, keyword);
 					});
 },
@@ -308,10 +308,10 @@ function(row1, menu_img, cafe_img, row2, star, keyword, callback){
 	+ "where menu_no = ?";
 	conn.query(sql, [data, data], function(err, tip){
 		if(err){
-			logger.info("tip 에러");
+			logger.error("tip 에러");
 			callback(err);
 		}else{
-			logger.info("tip", tip);
+			// logger.info("tip", tip);
 			callback(null, row1, menu_img, cafe_img, row2, star, keyword, tip);
 		}
 	});
@@ -323,10 +323,10 @@ function(row1, menu_img, cafe_img, row2, star, keyword, tip, callback){
 	+ "order by tip_regdate desc limit 1 "
 	conn.query(sql, [data, data], function(err, best_tip){
 		if(err){
-			logger.info("best_tip 에러");
+			logger.error("best_tip 에러");
 			callback(err);
 		}else{
-			logger.info("best_tip", best_tip);
+			// logger.info("best_tip", best_tip);
 			callback(null, row1, menu_img, cafe_img, row2, star, keyword, tip, best_tip);
 		}
 	});
@@ -491,66 +491,84 @@ exports.tip_like = function(data, done){
 			msg = "DB connect error";
 			done(check, msg);
 			conn.release();
-		}else{  
-			async.waterfall([
-				function(callback){ // 팁 좋아요 중복 검사
-					var sql = "select count(*) cnt from wm_menu_tip_like where user_no=? and tip_no=?";
-					conn.query(sql, data, function(err, row){
-						if(err){
-							msg = "팀 좋아요 중복 검사 데이터 입력 오류";
-							callback(err, msg);
-						}else{
-							if(row[0].cnt==1){
-								msg="이미 좋아요를 한 팁입니다.";
-								callback(check, msg);
+		}else{
+			conn.beginTransaction(function(err){
+				if (err) { 
+					msg="트랜젝션 에러";
+					callback(check, msg);
+				}else{
+					async.waterfall([
+					function(callback){ // 팁 좋아요 중복 검사
+						var sql = "select count(*) cnt from wm_menu_tip_like where user_no=? and tip_no=?";
+						conn.query(sql, data, function(err, row){
+							if(err){
+								msg = "팀 좋아요 중복 검사 데이터 입력 오류";
+								callback(err, msg);
 							}else{
-								callback(null);
+								if(row[0].cnt==1){
+									msg="이미 좋아요를 한 팁입니다.";
+									callback(check, msg);
+								}else{
+									callback(null);
+								}
 							}
-						}
-					});
-				},
-				function(callback){
-					var sql = "insert into wm_menu_tip_like(user_no, tip_no, tip_like_regdate) values(?,?,now())";
-					conn.query(sql, data, function(err, row){
-						if(err){
-							msg = "팁 좋아요 데이터 입력 오류";
-							callback(err, msg);
-						}else{
-							if(row.affectedRows == 1){
-								var sql_cnt = "update wm_menu_tip set tip_cnt=tip_cnt+1 where tip_no=?";
-								conn.query(sql_cnt, data[1], function(err, row_cnt){
-									if(err){
-										msg = "팁 좋아요 증가 데이터 입력 오류";
-										callback(err, msg);
-									}else{
-										if(row_cnt.affectedRows == 0){
-											msg = "DB 입력 오류";
+						});
+					},
+					function(callback){
+						var sql = "insert into wm_menu_tip_like(user_no, tip_no, tip_like_regdate) values(?,?,now())";
+						conn.query(sql, data, function(err, row){
+							if(err){
+								msg = "팁 좋아요 데이터 입력 오류";
+								callback(err, msg);
+							}else{
+								if(row.affectedRows == 1){
+									var sql_cnt = "update wm_menu_tip set tip_cnt=tip_cnt+1 where tip_no=?";
+									conn.query(sql_cnt, data[1], function(err, row_cnt){
+										if(err){
+											msg = "팁 좋아요 증가 데이터 입력 오류";
 											callback(err, msg);
 										}else{
-											msg = "Tip Like Success";
-											callback(null, msg);
+											if(row_cnt.affectedRows == 0){
+												msg = "DB 입력 오류";
+												callback(err, msg);
+											}else{
+												msg = "Tip Like Success";
+												callback(null, msg);
+											}
 										}
-									}
-								});
-							}else{
-								msg = "DB 입력 오류";
-								callback(err, msg);
+									});
+								}else{
+									msg = "DB 입력 오류";
+									callback(err, msg);
+								}
 							}
-						}
-					});
-				}
-				],
-				function(err, result){
-					if(err){
-						check = false;
-						done(check, result);
-						conn.release();
-					}else{
-						logger.info('check', check);
-						done(check, result);
-						conn.release();
+						});
 					}
-				});
+					],
+					function(err, result){
+						if(err){
+							check = false;
+							conn.rollback(function(){
+								check = false;
+								done(check, result);
+								conn.release();
+							});
+						}else{
+							conn.commit(function(err){
+								if(err){
+									msg = "commit error"
+									done(check, msg);
+									conn.release();	
+								}else{
+									logger.info('check', check);
+									done(check, result);
+									conn.release();
+								}
+							});
+						}
+					}); // waterfall
+}
+}); //beginTransaction
 }
 });
 };
@@ -570,45 +588,76 @@ exports.tip_like_delete = function(data, done){
 			conn.release();
 		}else{
 			logger.info('data', data);
-			var sql = "delete from wm_menu_tip_like where user_no=? and tip_no=?";
-			conn.query(sql, data, function(err, row){
-				if(err){
-					logger.error('err',err);
-					check = false;
-					msg = "팁 좋아요 삭제 입력 오류";
-					done(check, msg);
-					conn.release();
-				}else{
-					if(row.affectedRows == 1){
-						var sql_cnt = "update wm_menu_tip set tip_cnt=tip_cnt-1 where tip_no=?";
-						conn.query(sql_cnt, data[1], function(err, row_cnt){
-							if(err){
-								logger.error('err',err);
-								check = false;
-								msg = "팁 좋아요 갯수 감소 데이터 입력 오류";
-								done(check, msg);
-								conn.release();
-							}else{
-								if(row_cnt.affectedRows == 1){
-									msg = "Tip Like Delete Success";
-									done(check, msg);
-									conn.release();
-								}
-							}
-						});
-					}else{
-						logger.error('err',err);
+			conn.beginTransaction(function(err){
+				if (err) {
+					conn.rollback(function(){
 						check = false;
-						msg = "DB 입력 오류";
+						msg="트랜젝션 에러";
 						done(check, msg);
 						conn.release();
-					}
-				}
-			});
-		}
-	});	
+					});
+				}else{
+					var sql = "delete from wm_menu_tip_like where user_no=? and tip_no=?";
+					conn.query(sql, data, function(err, row){
+						if(err){
+							conn.rollback(function(){
+								logger.error('err',err);
+								check = false;
+								msg = "팁 좋아요 삭제 입력 오류";
+								done(check, msg);
+								conn.release();
+							});
+						}else{
+							if(row.affectedRows == 1){
+								var sql_cnt = "update wm_menu_tip set tip_cnt=tip_cnt-1 where tip_no=?";
+								conn.query(sql_cnt, data[1], function(err, row_cnt){
+									if(err){
+										conn.rollback(function(){
+											logger.error('err',err);
+											check = false;
+											msg = "팁 좋아요 갯수 감소 데이터 입력 오류";
+											done(check, msg);
+											conn.release();
+										});
+									}else{
+										if(row_cnt.affectedRows == 1){
+											conn.commit(function(err){
+												if(err){
+													conn.rollback(function(){
+														logger.error('err',err);
+														check = false;
+														msg = "트랜잭션 커밋 에러";
+														done(check, msg);
+														conn.release();
+													});
+												}else{
+													msg = "Tip Like Delete Success";
+													done(check, msg);
+													conn.release();
+												}
+											})
+										}
+									}
+								});
+							}else{
+								conn.rollback(function(){
+									check = false;
+									msg = "DB 입력 오류";
+									done(check, msg);
+									conn.release();
+								});
+							}
+						}
+					}); // delete query
+}
+			}); // beginTransaction
+}
+});	
 };
 
+/*****************************/
+/*		키워드  선택  		    */
+/***************************/
 exports.keyword_select = function(data, done){
 	var check = true;
 	var msg = "";
@@ -722,8 +771,8 @@ exports.keyword_select = function(data, done){
 						conn.release();
 					}
 				});
-		}
-	});
+}
+});
 };
 
 /*****************************/
@@ -892,4 +941,55 @@ exports.user_img_delete = function(data, done){
 
 }
 });
+};
+
+exports.add = function(done){
+	var check = true;
+	var msg = "";
+	pool.getConnection(function(err, conn){
+		if(err){  // DB 연결 오류
+			logger.error('err',err);
+			check = false;
+			msg = "DB connect error";
+			done(check, msg);
+			conn.release();
+		}else{
+			var start = 506;
+			var a = 1;
+			async.whilst(
+				function(){ return start <= 606; },
+				function(callback1){
+					var sql = "update wm_menu set menu_image_1 = 'http://52.68.54.75/menu/"+a+".jpg' where menu_no = ?";
+					logger.info(sql);
+					conn.query(sql, [start] ,function(err, row){
+						logger.info(sql);
+						if(err){  // 메뉴 사진 추가 DB 입력시 오류
+							logger.info(sql);
+							callback1(err);
+						}else{
+							logger.info('row', row);
+							if(row.affectedRows == 1){ //메뉴 사용자 사진 추가 ok
+								start++;
+								a++;
+								callback1();
+							}else{  //메뉴 사용자 사진 추가 DB 오류
+								check = false;
+								msg = "그냥 안됨";
+								callback1(check, msg);
+								conn.release();
+							}
+						}
+					});
+				},
+				function(err, msg){
+					if(err){
+						check = false;
+						done(check, msg);
+					}else{
+						done(check, msg);
+					}
+				}
+				)
+		}
+	});
 };

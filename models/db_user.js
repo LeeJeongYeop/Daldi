@@ -165,6 +165,7 @@ exports.fb_join = function(data, done){
 exports.join = function(data, done){
 	var check = true;
 	var msg = "";
+
 	pool.getConnection(function(err, conn){
 		if(err){  // DB 연결 오류
 			logger.error('err',err);

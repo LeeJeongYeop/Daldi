@@ -20,6 +20,11 @@ var log = require('./logger');
 
 var session = require('express-session');
 
+var redis = require('redis'); //redis
+var RedisStore = require('connect-redis')(session);
+var client = redis.createClient();
+client.select(0);
+
 var app = express();
 
 // view engine setup
@@ -28,6 +33,18 @@ app.set('view engine', 'ejs');
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(__dirname + '/public/favicon.ico'));
+
+app.use(session({
+  secret: 'keyboard cat',
+  resave: false,
+  saveUnitinialized: true,
+  store: new RedisStore({
+    host: 'localhost',
+    port: 6739,
+    ttl: 60*60,
+    client: client
+  })
+}));
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -99,7 +116,7 @@ app.use(function(err, req, res, next) {
 });
 
 var http = require('http');
-app.set('port', 80); //80번 포트로 지정
+app.set('port', 30003); //80번 포트로 지정
 var server = http.createServer(app);
 server.listen(app.get('port'));
 log.info('Port-->'+app.get('port'));

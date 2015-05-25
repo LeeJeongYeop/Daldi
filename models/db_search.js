@@ -295,3 +295,47 @@ exports.auto_search = function(done){
 }
 });
 }
+
+/*****************************/
+/*		  기본 화면		    */ 
+/***************************/
+exports.default_view = function(done){
+	var data = [];
+	for(var idx=0; idx<10; idx++){
+		var n = parseInt((Math.random()*3000));
+		data[idx] = n;
+		for(var b=0; b<idx; b++){
+			if(data[b]==n){
+				idx--;
+				break;
+			}
+		}
+	};
+	pool.getConnection(function(err, conn){
+		if(err){  // DB 연결 오류
+			logger.error('err',err);
+			check = false;
+			msg = "DB connect error";
+			done(check, msg);
+			conn.release();
+		}else{
+			logger.info('data', data);
+			var sql = "select m.menu_no, m.menu_name, m.menu_price, m.menu_image_1, c.cafe_no, c.cafe_name "
+			+ "from wm_menu m, wm_cafe c "
+			+ "where m.cafe_no = c.cafe_no and (m.menu_no=? or m.menu_no=? or m.menu_no=? or m.menu_no=? or m.menu_no=? or m.menu_no=? or m.menu_no=? or m.menu_no=? or m.menu_no=? or m.menu_no=?)";
+			conn.query(sql, data, function(err, row){
+				if(err){
+					logger.error('err',err);
+					check = false;
+					msg = "쿼리 에러";
+					done(check, msg);
+					conn.release();		
+				}else{
+					check = true;
+					done(check, row);
+					conn.release();
+				}
+			});
+		}
+	});	
+};

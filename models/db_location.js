@@ -25,9 +25,9 @@ exports.search = function(data, done){
 			async.waterfall([
 				function(callback){
 					var choice = ["아메리카노", "라떼", "프라푸치노", "모카", "에스프레소"];
-					var sql = "SELECT m.menu_no, m.menu_name, m.menu_price, m.menu_category, m.menu_image_1, c.cafe_name, c.cafe_address, c.cafe_lat, c.cafe_lon, (6371*acos(cos(radians(?))*cos(radians(c.cafe_lat))*cos(radians(c.cafe_lon)-radians(?))+sin(radians(?))*sin(radians(c.cafe_lat)))) AS distance "
+					var sql = "SELECT m.menu_no, m.menu_name, m.menu_price, m.menu_category, m.menu_image_1, c.cafe_no, c.cafe_name, c.cafe_address, c.cafe_lat, c.cafe_lon, (6371*acos(cos(radians(?))*cos(radians(c.cafe_lat))*cos(radians(c.cafe_lon)-radians(?))+sin(radians(?))*sin(radians(c.cafe_lat)))) AS distance "
 					+"FROM wm_menu m, wm_cafe c "
-					+"where m.cafe_no = c.cafe_no and m.menu_name like ? and m.menu_price >=3000 and m.menu_price <= 7000 and c.cafe_kind =? "
+					+"where m.cafe_no = c.cafe_no and m.menu_name like ? and m.menu_price >=3000 and m.menu_price <= 7000 and c.cafe_kind =? and c.cafe_no "
 					+"HAVING distance <= 0.7 ORDER BY distance limit 1";
 					async.eachSeries(choice, function(ch, callback1){
 						conn.query(sql, [data[0], data[1], data[0], '%'+ch+'%', data[2]], function(err, row){
@@ -58,7 +58,7 @@ exports.search = function(data, done){
 				},
 				function(row1, callback){
 					var choice = ["스무디", "버블티", "에이드", "홍차", "아이스티", "녹차"];
-					var sql = "SELECT m.menu_no, m.menu_name, m.menu_price, m.menu_category, m.menu_image_1, c.cafe_name, c.cafe_address, c.cafe_lat, c.cafe_lon, (6371*acos(cos(radians(?))*cos(radians(c.cafe_lat))*cos(radians(c.cafe_lon)-radians(?))+sin(radians(?))*sin(radians(c.cafe_lat)))) AS distance "
+					var sql = "SELECT m.menu_no, m.menu_name, m.menu_price, m.menu_category, m.menu_image_1, c.cafe_no, c.cafe_name, c.cafe_address, c.cafe_lat, c.cafe_lon, (6371*acos(cos(radians(?))*cos(radians(c.cafe_lat))*cos(radians(c.cafe_lon)-radians(?))+sin(radians(?))*sin(radians(c.cafe_lat)))) AS distance "
 					+"FROM wm_menu m, wm_cafe c "
 					+"where m.cafe_no = c.cafe_no and m.menu_name like ? and m.menu_price >=3000 and m.menu_price <= 7000 and c.cafe_kind =? "
 					+"HAVING distance <= 0.7 ORDER BY distance limit 1";
@@ -91,7 +91,7 @@ exports.search = function(data, done){
 				},
 				function(row1, row2, callback){
 					var choice = ["눈꽃빙수", "아이스크림", "팥빙수", "아포가토", "케이크빙수"];
-					var sql = "SELECT m.menu_no, m.menu_name, m.menu_price, m.menu_category, m.menu_image_1, c.cafe_name, c.cafe_address, c.cafe_lat, c.cafe_lon, (6371*acos(cos(radians(?))*cos(radians(c.cafe_lat))*cos(radians(c.cafe_lon)-radians(?))+sin(radians(?))*sin(radians(c.cafe_lat)))) AS distance "
+					var sql = "SELECT m.menu_no, m.menu_name, m.menu_price, m.menu_category, m.menu_image_1, c.cafe_no, c.cafe_name, c.cafe_address, c.cafe_lat, c.cafe_lon, (6371*acos(cos(radians(?))*cos(radians(c.cafe_lat))*cos(radians(c.cafe_lon)-radians(?))+sin(radians(?))*sin(radians(c.cafe_lat)))) AS distance "
 					+"FROM wm_menu m, wm_cafe c "
 					+"where m.cafe_no = c.cafe_no and m.menu_name like ? and m.menu_price >=3000 and m.menu_price <= 7000 and c.cafe_kind =? "
 					+"HAVING distance <= 0.7 ORDER BY distance limit 1";
@@ -124,7 +124,7 @@ exports.search = function(data, done){
 				},
 				function(row1, row2, row3, callback){
 					var choice = ["치즈케이크", "티라미수", "초코케이크", "생크림케이크", "에클레어"];
-					var sql = "SELECT m.menu_no, m.menu_name, m.menu_price, m.menu_category, m.menu_image_1, c.cafe_name, c.cafe_address, c.cafe_lat, c.cafe_lon, (6371*acos(cos(radians(?))*cos(radians(c.cafe_lat))*cos(radians(c.cafe_lon)-radians(?))+sin(radians(?))*sin(radians(c.cafe_lat)))) AS distance "
+					var sql = "SELECT m.menu_no, m.menu_name, m.menu_price, m.menu_category, m.menu_image_1, c.cafe_no, c.cafe_name, c.cafe_address, c.cafe_lat, c.cafe_lon, (6371*acos(cos(radians(?))*cos(radians(c.cafe_lat))*cos(radians(c.cafe_lon)-radians(?))+sin(radians(?))*sin(radians(c.cafe_lat)))) AS distance "
 					+"FROM wm_menu m, wm_cafe c "
 					+"where m.cafe_no = c.cafe_no and m.menu_name like ? and m.menu_price >=3000 and m.menu_price <= 7000 and c.cafe_kind =? "
 					+"HAVING distance <= 0.7 ORDER BY distance limit 1";
@@ -157,7 +157,7 @@ exports.search = function(data, done){
 				},
 				function(row1, row2, row3, row4, callback){
 					var choice = ["와플", "초콜릿", "타르트", "쿠키"];
-					var sql = "SELECT m.menu_no, m.menu_name, m.menu_price, m.menu_category, m.menu_image_1, c.cafe_name, c.cafe_address, c.cafe_lat, c.cafe_lon, (6371*acos(cos(radians(?))*cos(radians(c.cafe_lat))*cos(radians(c.cafe_lon)-radians(?))+sin(radians(?))*sin(radians(c.cafe_lat)))) AS distance "
+					var sql = "SELECT m.menu_no, m.menu_name, m.menu_price, m.menu_category, m.menu_image_1, c.cafe_no, c.cafe_name, c.cafe_address, c.cafe_lat, c.cafe_lon, (6371*acos(cos(radians(?))*cos(radians(c.cafe_lat))*cos(radians(c.cafe_lon)-radians(?))+sin(radians(?))*sin(radians(c.cafe_lat)))) AS distance "
 					+"FROM wm_menu m, wm_cafe c "
 					+"where m.cafe_no = c.cafe_no and m.menu_name like ? and m.menu_price >=3000 and m.menu_price <= 7000 and c.cafe_kind = ? "
 					+"HAVING distance <= 0.7 ORDER BY distance limit 1";
@@ -219,8 +219,9 @@ exports.survey = function(data, done){
 			done(check, msg);
 			conn.release();
 		}else{
-			var sql = "select count(*) cnt from wm_survey";
+			var sql = "select count(*) cnt from wm_survey where user_no=?";
 			conn.query(sql, data[0], function(err, row){
+				logger.info('row[0]', row[0].cnt)
 				if(err){
 					logger.error('err',err);
 					check = false;

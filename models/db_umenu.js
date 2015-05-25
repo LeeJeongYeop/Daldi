@@ -432,8 +432,15 @@ exports.add = function(data, done){
 			msg = "DB connect error";
 			done(check, msg);
 			conn.release();
-		}else{  
-			async.waterfall([
+		}else{
+			conn.beginTransaction(function(err){
+				if (err) { 
+					msg="트랜젝션 에러";
+					check = false;
+					done(check, msg);
+					conn.release();
+				}else{
+					async.waterfall([
 				function(callback){ // 내 메뉴판 메뉴 중복 검사
 					var sql = "select menu_no from wm_user_menu where umb_no=?";
 					conn.query(sql, data[0], function(err, row){
@@ -498,15 +505,27 @@ exports.add = function(data, done){
 				],
 				function(err, result){
 					if(err){
-						logger.error(err);
 						check = false;
-						done(check, msg);
-						conn.release();
+						conn.rollback(function(){
+							done(check, result);
+							conn.release();
+						});
 					}else{
-						done(check, result);
-						conn.release();
+						conn.commit(function(err){
+							if(err){
+								msg = "commit error"
+								done(check, msg);
+								conn.release();	
+							}else{
+								logger.info('check', check);
+								done(check, result);
+								conn.release();
+							}
+						});
 					}
-				});
+					}); // waterfall
+}
+}); //beginTransaction
 }
 });
 };
@@ -521,8 +540,15 @@ exports.add_one = function(data, done){
 			msg = "DB connect error";
 			done(check, msg);
 			conn.release();
-		}else{  
-			async.waterfall([
+		}else{ 
+			conn.beginTransaction(function(err){
+				if (err) { 
+					msg="트랜젝션 에러";
+					check = false;
+					done(check, msg);
+					conn.release();
+				}else{
+					async.waterfall([
 				function(callback){ // 내 메뉴판 메뉴 중복 검사
 					var sql = "select count(*) cnt from wm_user_menu where umb_no=? and menu_no=?";
 					conn.query(sql, data, function(err, row){
@@ -573,20 +599,32 @@ exports.add_one = function(data, done){
 				function(err, result){
 					if(err){
 						check = false;
-						done(check, result);
-						conn.release();
+						conn.rollback(function(){
+							done(check, result);
+							conn.release();
+						});
 					}else{
-						logger.info('check', check);
-						done(check, result);
-						conn.release();
+						conn.commit(function(err){
+							if(err){
+								msg = "commit error"
+								done(check, msg);
+								conn.release();	
+							}else{
+								logger.info('check', check);
+								done(check, result);
+								conn.release();
+							}
+						});
 					}
-				});
+					}); // waterfall
+}
+}); //beginTransaction
 }
 });
 };
 
 /*****************************/
-/*		회원 메뉴판 메뉴삭제     */ 
+/*		회원 메뉴판 메뉴삭제      */ 
 /***************************/
 exports.delete = function(data, done){
 	var check = true;
@@ -599,48 +637,68 @@ exports.delete = function(data, done){
 			done(check, msg);
 			conn.release();
 		}else{
-			var sql = "delete from wm_user_menu where umenu_no=?";
-			async.each(data[1], function(data_ok, callback){
-				conn.query(sql, data_ok, function(err, row){
-					if(err){
-						msg = "메뉴 추가 데이터 입력 오류";
-						callback(check, msg);
-					}else{
-						if(row.affectedRows == 1){
-							var sql_cnt = "update wm_user_menu_board set umb_cnt=umb_cnt-1 where umb_no=?";
-							conn.query(sql_cnt, data[0], function(err, row_cnt){
-								if(err){
-									msg = "메뉴 갯수 증가 데이터 입력 오류";
-									callback(check, msg);
-								}else{
-									if(row_cnt.affectedRows == 0){
-										msg = "DB 입력 오류";
-										callback(check, msg);
-									}else{
-										callback(null);
-									}
-								}
-							});
-						}else{
-							msg = "DB 입력 오류";
-							callback(check, msg);
-						}
-					}
-				});
-			},function(err){
-				if(err){
-					logger.error('err',err);
+			conn.beginTransaction(function(err){
+				if (err) { 
+					msg="트랜젝션 에러";
 					check = false;
 					done(check, msg);
 					conn.release();
 				}else{
-					msg = "Delete Success";
-					done(check, msg);
-					conn.release();
-				}
-			});
-		}
-	});	
+					var sql = "delete from wm_user_menu where umenu_no=?";
+					async.each(data[1], function(data_ok, callback){
+						conn.query(sql, data_ok, function(err, row){
+							if(err){
+								msg = "메뉴 추가 데이터 입력 오류";
+								callback(check, msg);
+							}else{
+								if(row.affectedRows == 1){
+									var sql_cnt = "update wm_user_menu_board set umb_cnt=umb_cnt-1 where umb_no=?";
+									conn.query(sql_cnt, data[0], function(err, row_cnt){
+										if(err){
+											msg = "메뉴 갯수 증가 데이터 입력 오류";
+											callback(check, msg);
+										}else{
+											if(row_cnt.affectedRows == 0){
+												msg = "DB 입력 오류";
+												callback(check, msg);
+											}else{
+												callback(null);
+											}
+										}
+									});
+								}else{
+									msg = "DB 입력 오류";
+									callback(check, msg);
+								}
+							}
+						});
+					},
+					function(err){
+						if(err){
+							conn.rollback(function(){
+								logger.error('err',err);
+								check = false;
+								done(check, msg);
+								conn.release();
+							});
+						}else{
+							conn.commit(function(err){
+								if(err){
+									msg = "commit error"
+									done(check, msg);
+									conn.release();	
+								}else{
+									msg = "Delete Success";
+									done(check, msg);
+									conn.release();
+								}
+							});
+						}
+					}); // waterfall
+}
+}); //beginTransaction
+}
+});	
 }
 
 exports.delete_one = function(data, done){
@@ -654,48 +712,78 @@ exports.delete_one = function(data, done){
 			done(check, msg);
 			conn.release();
 		}else{
-			var sql = "delete from wm_user_menu where umenu_no=?";
-			logger.info('data',data);
-			conn.query(sql, data[1], function(err, row){
-				if(err){
-					logger.error('err',err);
+			conn.beginTransaction(function(err){
+				if (err) {
 					check = false;
-					msg = "메뉴 추가 데이터 입력 오류";
+					msg="트랜젝션 에러";
 					done(check, msg);
 					conn.release();
 				}else{
-					if(row.affectedRows == 1){
-						var sql_cnt = "update wm_user_menu_board set umb_cnt=umb_cnt-1 where umb_no=?";
-						conn.query(sql_cnt, data[0], function(err, row_cnt){
-							if(err){
-								logger.error('err',err);
+					var sql = "delete from wm_user_menu where umenu_no=?";
+					logger.info('data',data);
+					conn.query(sql, data[1], function(err, row){
+						if(err){
+							conn.rollback(function(){
+								logger.error('err', err);
 								check = false;
-								msg = "메뉴 갯수 증가 데이터 입력 오류";
+								msg = "메뉴 추가 데이터 입력 오류";
 								done(check, msg);
 								conn.release();
+							});
+						}else{
+							if(row.affectedRows == 1){
+								var sql_cnt = "update wm_user_menu_board set umb_cnt=umb_cnt-1 where umb_no=?";
+								conn.query(sql_cnt, data[0], function(err, row_cnt){
+									if(err){
+										conn.rollback(function(){
+											logger.error('err',err);
+											check = false;
+											msg = "메뉴 갯수 증가 데이터 입력 오류";
+											done(check, msg);
+											conn.release();
+										});
+									}else{
+										if(row_cnt.affectedRows == 1){
+											conn.commit(function(err){
+												if(err){
+													check = false;
+													msg = "트랜잭션 커밋 에러";
+													done(check, msg);
+													conn.release();
+												}else{
+													msg = "Delete Success";
+													done(check, msg);
+													conn.release();
+												}
+											});
+										}else{
+											conn.rollback(function(){
+												check = false;
+												msg = "수정 안됨";
+												done(check, msg);
+												conn.release();
+											});
+										}
+									}
+								});
 							}else{
-								if(row_cnt.affectedRows == 1){
-									msg = "Delete Success";
+								conn.rollback(function(){
+									check = false;
+									msg = "DB 입력 오류";
 									done(check, msg);
 									conn.release();
-								}
+								});
 							}
-						});
-					}else{
-						logger.error('err',err);
-						check = false;
-						msg = "DB 입력 오류";
-						done(check, msg);
-						conn.release();
-					}
-				}
-			});
-		}
-	});	
+						}
+					});
+}
+});
+}
+});	
 }
 
 /*****************************/
-/*		회원 메뉴판 메뉴이동     */ 
+/*		회원 메뉴판 메뉴이동      */ 
 /***************************/
 exports.transfer = function(data, done){
 	var check = true;
@@ -709,7 +797,14 @@ exports.transfer = function(data, done){
 			done(check, msg);
 			conn.release();
 		}else{
-			async.waterfall([
+			conn.beginTransaction(function(err){
+				if (err) { 
+					msg="트랜젝션 에러";
+					check = false;
+					done(check, msg);
+					conn.release();
+				}else{
+					async.waterfall([
 				function(callback){ // 내 메뉴판 메뉴 중복 검사
 					var sql = "select menu_no from wm_user_menu where umb_no=?";
 					conn.query(sql, data[1], function(err, row){
@@ -788,15 +883,27 @@ exports.transfer = function(data, done){
 ],
 function(err, result){
 	if(err){
-		logger.error(err);
-		check = false;
-		done(check, result);
-		conn.release();
+		conn.rollback(function(){
+			logger.error('err',err);
+			check = false;
+			done(check, result);
+			conn.release();
+		});
 	}else{
-		done(check, result);
-		conn.release();
+		conn.commit(function(err){
+			if(err){
+				msg = "commit error"
+				done(check, msg);
+				conn.release();	
+			}else{
+				done(check, reulst);
+				conn.release();
+			}
+		});
 	}
-});
+}); // waterfall
+}
+}); //beginTransaction
 }
 });	
 }
@@ -812,85 +919,120 @@ exports.transfer_one = function(data, done){
 			done(check, msg);
 			conn.release();
 		}else{
-			var sql = "select count(*) cnt from wm_user_menu where umb_no=? and menu_no=?";
-			conn.query(sql, [data[1], data[3]], function(err, row){
-				if(err){
-					logger.error('err',err);
+			conn.beginTransaction(function(err){
+				if(err){ 
+					msg="트랜젝션 에러";
 					check = false;
-					msg = "메뉴 추가 데이터 입력 오류";
 					done(check, msg);
 					conn.release();
 				}else{
-					if(row[0].cnt==1){
-						logger.error('err',err);
-						check = false;
-						msg = "메뉴가 중복 됩니다.";
-						done(check, msg);
-						conn.release();
-					}else{
-						var sql = "update wm_user_menu set umb_no=? where umenu_no=?";
-						conn.query(sql, [data[1], data[2]], function(err, row){
-							if(err){
+					var sql = "select count(*) cnt from wm_user_menu where umb_no=? and menu_no=?";
+					conn.query(sql, [data[1], data[3]], function(err, row){
+						if(err){
+							conn.rollback(function(err){
 								logger.error('err',err);
 								check = false;
 								msg = "메뉴 추가 데이터 입력 오류";
 								done(check, msg);
 								conn.release();
+							});
+						}else{
+							if(row[0].cnt==1){
+								conn.rollback(function(err){
+									logger.error('err',err);
+									check = false;
+									msg = "메뉴가 중복 됩니다.";
+									done(check, msg);
+									conn.release();
+								});
 							}else{
-								if(row.affectedRows == 1){
-									var sql_cnt = "update wm_user_menu_board set umb_cnt=umb_cnt-1 where umb_no=?";
-									conn.query(sql_cnt, data[0], function(err, row_cnt){
-										if(err){
+								var sql = "update wm_user_menu set umb_no=? where umenu_no=?";
+								conn.query(sql, [data[1], data[2]], function(err, row){
+									if(err){
+										conn.rollback(function(err){
 											logger.error('err',err);
 											check = false;
-											msg = "메뉴 갯수 증가 데이터 입력 오류";
+											msg = "메뉴 추가 데이터 입력 오류";
 											done(check, msg);
 											conn.release();
-										}else{
-											if(row_cnt.affectedRows == 0){
-												logger.error('err',err);
-												check = false;
-												msg = "이전 메뉴판 cnt 수정 오류";
-												done(check, msg);
-												conn.release();
-											}else{
-												var sql_cnt = "update wm_user_menu_board set umb_cnt=umb_cnt+1 where umb_no=?";
-												conn.query(sql_cnt, data[1], function(err, row_cnt){
-													if(err){
+										});
+									}else{
+										if(row.affectedRows == 1){
+											var sql_cnt = "update wm_user_menu_board set umb_cnt=umb_cnt-1 where umb_no=?";
+											conn.query(sql_cnt, data[0], function(err, row_cnt){
+												if(err){
+													conn.rollback(function(err){
 														logger.error('err',err);
 														check = false;
 														msg = "메뉴 갯수 증가 데이터 입력 오류";
 														done(check, msg);
 														conn.release();
-													}else{
-														if(row_cnt.affectedRows == 0){
+													});
+												}else{
+													if(row_cnt.affectedRows == 0){
+														conn.rollback(function(err){
 															logger.error('err',err);
 															check = false;
-															msg = "이후 메뉴판 cnt 수정 오류";
+															msg = "이전 메뉴판 cnt 수정 오류";
 															done(check, msg);
 															conn.release();
-														}else{
-															msg = "transfer Success";
-															done(check, msg);
-															conn.release();
-														}
-													}
-												});
-											}
-										}
-									});
+														});
+													}else{
+														var sql_cnt = "update wm_user_menu_board set umb_cnt=umb_cnt+1 where umb_no=?";
+														conn.query(sql_cnt, data[1], function(err, row_cnt){
+															if(err){
+																conn.rollback(function(err){
+																	logger.error('err',err);
+																	check = false;
+																	msg = "메뉴 갯수 증가 데이터 입력 오류";
+																	done(check, msg);
+																	conn.release();
+																});
+															}else{
+																if(row_cnt.affectedRows == 0){
+																	conn.rollback(function(err){
+																		check = false;
+																		msg = "이후 메뉴판 cnt 수정 오류";
+																		done(check, msg);
+																		conn.release();
+																	});
+																}else{
+																	conn.commit(function(err){
+																		if(err){
+																			conn.rollback(function(err){
+																				check = false;
+																				msg = "트랜잭션 커밋 에러";
+																				done(check, msg);
+																				conn.release();
+																			});
+																		}else{
+																			msg = "transfer Success";
+																			done(check, msg);
+																			conn.release();
+																		}
+																	});
+																}
+															}
+														});
+}
+}
+});
 }else{
-	logger.error('err',err);
-	check = false;
-	msg = "DB 입력 오류";
-	done(check, msg);
-	conn.release();
+	conn.rollback(function(err){
+		logger.error('err',err);
+		check = false;
+		msg = "DB 입력 오류";
+		done(check, msg);
+		conn.release();
+	});
 }
 }
 });
 }
 }
 });
+}
+}); //beginTransaction
 }
 });
 };

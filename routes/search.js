@@ -145,4 +145,19 @@ router.post('/auto', function(req, res, next){
 	});
 });
 
+router.post('/default', function(req, res, next){
+	db_search.default_view(function(check, row){
+		if(check){
+			res.json({
+				"List" : row
+			});
+		}else{
+			res.json({
+				"Result" : "Fail",
+				"MSG" : row
+			});
+		}
+	});
+});
+
 module.exports = router;
