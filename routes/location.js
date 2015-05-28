@@ -28,7 +28,7 @@ router.post('/search', function(req, res, next){
 		}else{
 			res.json({
 				"Result" : "Search Fail",
-				"MSG" : row
+				"MSG" : row1
 			});
 		}
 	});

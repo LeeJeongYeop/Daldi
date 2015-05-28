@@ -954,20 +954,20 @@ exports.add = function(done){
 			done(check, msg);
 			conn.release();
 		}else{
-			var start = 506;
+			var start = 1;
 			var a = 1;
 			async.whilst(
-				function(){ return start <= 606; },
+				function(){ return start <= 54; },
 				function(callback1){
-					var sql = "update wm_menu set menu_image_1 = 'http://52.68.54.75/menu/"+a+".jpg' where menu_no = ?";
-					logger.info(sql);
+					var sql = "update wm_cafe set cafe_img = 'http://52.68.54.75/cafe/"+a+"_2실내2.jpg' where cafe_no = ?";
+					// logger.info(sql);
 					conn.query(sql, [start] ,function(err, row){
-						logger.info(sql);
+						// logger.info(sql);
 						if(err){  // 메뉴 사진 추가 DB 입력시 오류
-							logger.info(sql);
+							logger.error(sql);
 							callback1(err);
 						}else{
-							logger.info('row', row);
+							// logger.info('row', row);
 							if(row.affectedRows == 1){ //메뉴 사용자 사진 추가 ok
 								start++;
 								a++;

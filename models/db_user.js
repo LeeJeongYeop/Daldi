@@ -299,7 +299,8 @@ exports.login = function(data, done){
 exports.modify = function(data, done){
 	var check = true;
 	var msg = "";
-	pool.getConnection(function(err, conn){
+	if(data.length == 5){
+		pool.getConnection(function(err, conn){
 		if(err){  // DB 연결 오류
 			console.error('err',err);
 			check = false;
@@ -330,6 +331,39 @@ exports.modify = function(data, done){
 			});
 		}
 	});
+	}else{
+		pool.getConnection(function(err, conn){
+		if(err){  // DB 연결 오류
+			console.error('err',err);
+			check = false;
+			msg = "DB connect error";
+			done(check, msg);
+			conn.release();
+		}else{
+			var sql = "update wm_user set user_name=?, user_gender=?, user_email=? where user_no=?";
+			conn.query(sql, data, function(err, row){
+				if(err){  // modify 정보 데이터 입력 오류
+					console.error('err', err);
+					check = false;
+					msg = "modify 정보 데이터 입력 오류";
+					done(check, msg);
+					conn.release();
+				}else{
+					if(row.affectedRows == 1){
+						msg = "modify Success";
+						done(check, row);
+						conn.release();
+					}else{
+						check = false;
+						msg = "modify DB Fail";
+						done(check, msg);
+						conn.release();
+					}
+				}
+			});
+		}
+	});
+	}
 };
 
 exports.find_password = function(data, done){

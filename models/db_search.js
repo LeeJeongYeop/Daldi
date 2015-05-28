@@ -241,7 +241,7 @@ exports.auto_search = function(done){
 						if(err){
 							callback(err);
 						}else{
-							logger.info('row', row1);
+							// logger.info('row', row1);
 							if(row1){
 								callback(null, row1);
 							}else{
@@ -256,7 +256,7 @@ exports.auto_search = function(done){
 						if(err){
 							callback(err);
 						}else{
-							logger.info('row', row2);
+							// logger.info('row', row2);
 							if(row2){
 								callback(null, row1, row2);
 							}else{
@@ -271,7 +271,7 @@ exports.auto_search = function(done){
 						if(err){
 							callback(err);
 						}else{
-							logger.info('row', row3);
+							// logger.info('row', row3);
 							if(row3){
 								callback(null, row1, row2, row3);
 							}else{
@@ -319,7 +319,7 @@ exports.default_view = function(done){
 			done(check, msg);
 			conn.release();
 		}else{
-			logger.info('data', data);
+			// logger.info('data', data);
 			var sql = "select m.menu_no, m.menu_name, m.menu_price, m.menu_image_1, c.cafe_no, c.cafe_name "
 			+ "from wm_menu m, wm_cafe c "
 			+ "where m.cafe_no = c.cafe_no and (m.menu_no=? or m.menu_no=? or m.menu_no=? or m.menu_no=? or m.menu_no=? or m.menu_no=? or m.menu_no=? or m.menu_no=? or m.menu_no=? or m.menu_no=?)";

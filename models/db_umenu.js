@@ -83,18 +83,7 @@ exports.board_delete = function(data, done){
 								done(check ,msg);
 								conn.release();
 							}else{
-								var pathArr = row[0].umb_img.split('/');
-								var fileName = pathArr[pathArr.length-1];
-								var filePath = "./public/images/umenu_board/"+fileName;
-								logger.info('fileName', fileName);
-								fs.unlink(filePath, function(err){
-									if(err){ 
-										logger.error('err',err);
-										check = false;
-										msg = "내 메뉴판 사진 삭제 오류";
-										done(check ,msg);
-										conn.release();
-									}
+								if(row.length > 0){
 									var sql = "delete from wm_user_menu_board where umb_no=?";
 									conn.query(sql, data, function(err, row){
 										if(err){  // 내 메뉴판  DB 입력시 오류
@@ -117,7 +106,43 @@ exports.board_delete = function(data, done){
 											}
 										}
 									});
-								});
+								}else{
+									var pathArr = row[0].umb_img.split('/');
+									var fileName = pathArr[pathArr.length-1];
+									var filePath = "./public/images/umenu_board/"+fileName;
+									logger.info('fileName', fileName);
+									fs.unlink(filePath, function(err){
+										if(err){ 
+											logger.error('err',err);
+											check = false;
+											msg = "내 메뉴판 사진 삭제 오류";
+											done(check ,msg);
+											conn.release();
+										}
+										var sql = "delete from wm_user_menu_board where umb_no=?";
+										conn.query(sql, data, function(err, row){
+											if(err){  // 내 메뉴판  DB 입력시 오류
+												logger.error('err', err);
+												check = false;
+												msg = "내 메뉴판 DB 입력 오류";
+												done(check ,msg);
+												conn.release();
+											}else{
+												logger.info('row', row);
+												if(row.affectedRows == 1){  // 내 메뉴판 삭제 OK
+													msg = "Board Delete Success";
+													done(check, msg);
+													conn.release();
+												}else{  // 내 메뉴판 삭제 DB 오류
+													check = false;
+													msg = "DB 오류 다시 시도해주세요.";
+													done(check, msg);
+													conn.release();
+												}
+											}
+										});
+									});
+								}
 							}
 						});
 					}else{  // 내 메뉴판이 없음
@@ -896,7 +921,7 @@ function(err, result){
 				done(check, msg);
 				conn.release();	
 			}else{
-				done(check, reulst);
+				done(check, result);
 				conn.release();
 			}
 		});

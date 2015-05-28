@@ -202,21 +202,40 @@ router.post("/modify", function(req, res, next){
 		var user_gender = req.body.User_Gender;
 		var user_email = req.body.User_Email;
 		var user_new_password = req.body.User_New_Password;
-		var data = [user_name, user_gender, user_new_password, user_email, user_no];
-		db_user.modify(data, function(check, row){
-			if(check){
-				req.session.log_data.user_name = user_name;
-				req.session.log_data.user_gender = user_gender;
-				res.json({
-					"Result" : "Modify Success"
-				});
-			}else{
-				res.json({
-					"Result" : "Modify Fail",
-					"MSG" : row
-				});
-			}
-		});
+		if(user_new_password == ""){
+			var data = [user_name, user_gender, user_email, user_no];
+			db_user.modify(data, function(check, row){
+				if(check){
+					req.session.log_data.user_name = user_name;
+					req.session.log_data.user_gender = user_gender;
+					res.json({
+						"Result" : "Modify Success"
+					});
+				}else{
+					res.json({
+						"Result" : "Modify Fail",
+						"MSG" : row
+					});
+				}
+			});
+		}else{
+			user_new_password = _crypto.do_ciper(user_new_password);
+			var data = [user_name, user_gender, user_new_password, user_email, user_no];
+			db_user.modify(data, function(check, row){
+				if(check){
+					req.session.log_data.user_name = user_name;
+					req.session.log_data.user_gender = user_gender;
+					res.json({
+						"Result" : "Modify Success"
+					});
+				}else{
+					res.json({
+						"Result" : "Modify Fail",
+						"MSG" : row
+					});
+				}
+			});
+		}
 	}else{
 		res.json({
 			"Result" : "Modify Fail",
