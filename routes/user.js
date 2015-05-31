@@ -144,32 +144,25 @@ router.post("/login", function(req, res, next){
 
 router.post("/find/password", function(req, res, next){
 	logger.info('req.body', req.body);
-	if(req.session.log_data.user_joinpath == 0){
-		var user_no = req.session.log_data.user_no;
-		var email = req.body.User_Email;
-		var imsi = Math.floor(Math.random() * 1000000)+100000;
-		if(imsi>1000000){
-			imsi = imsi - 100000;
-		}
-		var data = [email, imsi, user_no];
-
-		db_user.find_password(data, function(check, msg){
-			if(check){
-				res.json({
-					"Result" : msg
-				});
-			}else{
-				res.json({
-					"Result" : "Find Password Fail",
-					"MSG" : msg
-				});	
-			}
-		});
-	}else{
-		res.json({
-			"Result" : "Facebook User Fail"
-		});
+	var user_id = req.body.User_ID;
+	var imsi = Math.floor(Math.random() * 1000000)+100000;
+	if(imsi>1000000){
+		imsi = imsi - 100000;
 	}
+	var data = [user_id, imsi];
+
+	db_user.find_password(data, function(check, msg){
+		if(check){
+			res.json({
+				"Result" : msg
+			});
+		}else{
+			res.json({
+				"Result" : "Find Password Fail",
+				"MSG" : msg
+			});	
+		}
+	});
 });
 
 router.post("/info", function(req, res, next){

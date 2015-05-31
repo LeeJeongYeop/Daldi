@@ -6,6 +6,8 @@ var logger = require('../logger');
 var pool = mysql.createPool(db_config);
 var graph = require('fbgraph');
 var nodemailer = require('nodemailer');
+var crypto = require('crypto');
+var _crypto = require('./db_crypto');
 
 /*****************************/
 /*			페이스북  			 */ 
@@ -377,8 +379,8 @@ exports.find_password = function(data, done){
 			done(check, msg);
 			conn.release();
 		}else{
-			var sql = "update wm_user set user_password=? where user_no=?";
-			conn.query(sql, [data[1], data[2]], function(err, row){
+			var sql = "select count(*) cnt from wm_user where user_id=?";
+			conn.query(sql, data[0], function(err, row){
 				if(err){
 					logger.error('err', err);
 					check = false;
@@ -386,47 +388,67 @@ exports.find_password = function(data, done){
 					done(check, msg);
 					conn.release();
 				}else{
-					if(row.affectedRows == 1){
-						logger.info('data[0]', data[0]);
-						var transporter = nodemailer.createTransport({
-							service: 'Gmail',
-							auth: {
-								user: 'daldimanager@gmail.com',
-								pass: 'ekfelekfel@'
-							}
-						});
-						var mailOptions = {
-							from: 'daldimanager <daldimanager@gmail.com>',
-							to: data[0],
-							subject: 'Daldi Application 비밀번호 찾기 서비스입니다.',
-							text: '임시 비밀번호는 '+data[1]+' 입니다. \n 회원정보에서 비밀번호를 변경해주세요.',
-							html: '임시 비밀번호는 '+data[1]+' 입니다. <br> 회원정보에서 비밀번호를 변경해주세요.'
-						};
-
-						transporter.sendMail(mailOptions, function(error, info){
-							if(error){
-								logger.error(error);
-								console.error('err', err);
+					if(row[0].cnt == 0){
+						check = false;
+						msg = "아이디가 존재하지 않습니다.";
+						done(check, msg);
+						conn.release();	
+					}else{
+						var sql = "update wm_user set user_password=? where user_id=?";
+						var imsi_pw = _crypto.do_ciper(""+data[1]);
+						logger.info('imsi', imsi_pw);
+						conn.query(sql, [imsi_pw, data[0]], function(err, row){
+							if(err){
+								logger.error('err', err);
 								check = false;
-								msg = "비밀번호 찾기 메일전송 에러"
+								msg = "비밀번호 찾기 비밀번호 변경 DB 에러"
 								done(check, msg);
 								conn.release();
 							}else{
-								logger.info('Message sent: ' + info.response);
-								msg = "Find Password Success";
-								done(check, msg);
-								conn.release();
+								if(row.affectedRows == 1){
+									logger.info('data[0]', data[0]);
+									var transporter = nodemailer.createTransport({
+										service: 'Gmail',
+										auth: {
+											user: 'daldimanager@gmail.com',
+											pass: 'ekfelekfel@'
+										}
+									});
+									var mailOptions = {
+										from: 'daldimanager <daldimanager@gmail.com>',
+										to: data[0],
+										subject: 'Daldi Application 비밀번호 찾기 서비스입니다.',
+										text: '임시 비밀번호는 '+data[1]+' 입니다. \n 회원정보에서 비밀번호를 변경해주세요.',
+										html: '임시 비밀번호는 '+data[1]+' 입니다. <br> 회원정보에서 비밀번호를 변경해주세요.'
+									};
+
+									transporter.sendMail(mailOptions, function(error, info){
+										if(error){
+											logger.error(error);
+											console.error('err', err);
+											check = false;
+											msg = "비밀번호 찾기 메일전송 에러"
+											done(check, msg);
+											conn.release();
+										}else{
+											logger.info('Message sent: ' + info.response);
+											msg = "Find Password Success";
+											done(check, msg);
+											conn.release();
+										}
+									});
+								}else{
+									logger.error('err', err);
+									check = false;
+									msg = "비밀번호 찾기 비밀번호 변경 에러"
+									done(check, msg);
+									conn.release();
+								}
 							}
 						});
-					}else{
-						logger.error('err', err);
-						check = false;
-						msg = "비밀번호 찾기 비밀번호 변경 에러"
-						done(check, msg);
-						conn.release();
-					}
-				}
-			});
+}
+}
+});
 }
 });
 };
